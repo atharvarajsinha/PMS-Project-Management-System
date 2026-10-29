@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 17 88% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 33 100% 96%;
+    --accent-foreground: 15 75% 28%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 72% 29%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 9%;
+    --info: 224 76% 48%;
+    --info-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 17 88% 40%;
+    --radius: 0.5rem;
+    /* Brand gradient: both stops keep white text ≥ 4.5:1 */
+    --gradient-from: 21 90% 41%;
+    --gradient-to: 12 80% 36%;
+    --glow: 21 90% 48%;
+  }
+
+  /* Dark orange: warm near-black surfaces under an orange glow */
+  .dark {
+    --background: 20 18% 4%;
+    --foreground: 30 20% 97%;
+    --card: 20 16% 7%;
+    --card-foreground: 30 20% 97%;
+    --popover: 20 16% 8%;
+    --popover-foreground: 30 20% 97%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 20 12% 12%;
+    --secondary-foreground: 30 20% 97%;
+    --muted: 20 12% 12%;
+    --muted-foreground: 25 8% 64%;
+    --accent: 22 65% 11%;
+    --accent-foreground: 31 97% 72%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 4%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 4%;
+    --info: 213 94% 68%;
+    --info-foreground: 0 0% 4%;
+    --border: 20 14% 15%;
+    --input: 20 14% 17%;
+    --ring: 25 95% 53%;
+    /* Black text on both stops ≥ 5:1 */
+    --gradient-from: 33 98% 58%;
+    --gradient-to: 18 90% 50%;
+    --glow: 22 95% 50%;
+  }
+
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(var(--glow) / 0.10), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, hsl(var(--glow) / 0.05), transparent 70%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 80% 55% at 50% -10%, hsl(var(--glow) / 0.22), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, hsl(var(--glow) / 0.10), transparent 70%);
+  }
+}
+
+@layer utilities {
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+  }
+  .text-brand-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-to)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Global focus ring, except inside menus/lists/dialogs: Radix and cmdk move focus onto the
+     container and its items, which style their own highlight (bg-accent). */
+  :focus-visible:not(
+      [role="menu"], [role^="menuitem"], [role="listbox"], [role="option"],
+      [role="dialog"], [role="alertdialog"], [cmdk-root], [cmdk-input], [cmdk-item]
+    ) {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  [role="menu"]:focus-visible, [role="listbox"]:focus-visible, [role="dialog"]:focus-visible,
+  [role="alertdialog"]:focus-visible, [cmdk-input]:focus-visible {
+    @apply outline-none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

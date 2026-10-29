@@ -1,0 +1,2 @@
+{% autoescape off %}Your PMS account is ready
+{% endautoescape %}

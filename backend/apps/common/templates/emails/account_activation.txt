@@ -1,0 +1,13 @@
+{% autoescape off %}Hello {{ name }},
+
+Your PMS {{ role_label }} account{% if college_name %} at {{ college_name }}{% endif %} has been activated.
+
+Sign in: {{ login_url }}
+Email: {{ email }}
+Temporary password: {{ password }}
+
+You will be asked to choose a new password the first time you sign in. Keep this password private.
+If you did not expect this email, contact your administrator.
+
+— PMS
+{% endautoescape %}
