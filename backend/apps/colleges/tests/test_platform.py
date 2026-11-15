@@ -147,7 +147,7 @@ class JobsTests(PMSTestCase):
             self.assertError(self.client.get("/api/v1/jobs/run/?token=wrong"), 404, "NOT_FOUND")
             r = self.client.get("/api/v1/jobs/run/?token=s3cret")
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.json(), {"emails_sent": 0, "emails_failed": 0})
+            self.assertEqual(r.json(), {"emails_sent": 0, "emails_failed": 0, "phases_updated": 0, "phases_auto_locked": 0})
 
     def test_health(self):
         self.assertEqual(self.client.get("/api/v1/health/").json()["status"], "ok")
