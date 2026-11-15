@@ -16,6 +16,36 @@ from . import services
 from .models import Faculty, Student, User
 
 
+def ensure_teams_allow_move(student, new_section):
+    """A student in a team may move only to a section that also takes that team's subject."""
+    from apps.academics.models import SectionSubject
+    from apps.common.exceptions import Conflict
+    from apps.teams.models import TeamMember
+
+    taken = set(SectionSubject.objects.filter(section=new_section).values_list("semester_subject_id", flat=True))
+    blocking = (
+        TeamMember.objects.filter(student=student)
+        .exclude(semester_subject_id__in=taken)
+        .select_related("semester_subject__subject")
+    )
+    codes = sorted({m.semester_subject.subject.code for m in blocking})
+    if codes:
+        raise Conflict(
+            f"{student.user.name} is in a team for {', '.join(codes)}, which section {new_section.name} doesn't take. "
+            "Remove them from that team first."
+        )
+
+
+def resync_led_teams(student):
+    """The default evaluator follows the Team Lead's section (only before teams are locked)."""
+    from apps.evaluations.services import sync_team
+
+    if student.college.settings.teams_locked:
+        return
+    for team in student.led_teams.select_related("lead", "semester_subject"):
+        sync_team(team)
+
+
 def validate_new_password(password, user):
     """Run Django's password validators; errors are reported on `new_password`."""
     try:
@@ -237,9 +267,13 @@ class StudentSerializer(_PersonSerializer):
         if "roll_number" in validated_data:
             services.ensure_roll_number_available(instance.college, validated_data["roll_number"], instance)
             instance.roll_number = validated_data["roll_number"]
-        if "section" in validated_data:
+        moved = "section" in validated_data and validated_data["section"].pk != instance.section_id
+        if moved:
+            ensure_teams_allow_move(instance, validated_data["section"])
             instance.section = validated_data["section"]
         instance.save()
+        if moved:
+            resync_led_teams(instance)
         return instance
 
 

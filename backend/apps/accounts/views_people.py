@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from apps.academics.models import Section
 from apps.common import audit
 from apps.common.bulk import BulkDeleteMixin
+from apps.common.exceptions import HasDependents
 from apps.common.permissions import IsCollegeAdmin
 from apps.common.serializers import BulkIdsSerializer
 from apps.common.tenancy import CollegeScopedMixin
@@ -165,9 +166,16 @@ class StudentViewSet(PersonViewSet):
     ordering_aliases = {"name": "user__name", "roll_number": "roll_number", "created_at": "created_at"}
     ordering = ["roll_number"]
     bulk_serializer_class = StudentBulkSerializer
+    dependents_message = "{obj.user.name} leads a team. Make another member the Team Lead first."
 
     def get_queryset(self):
         return Student.objects.filter(college=self.college).select_related("user", "section__semester")
+
+    def perform_destroy(self, instance):
+        # Team.lead is RESTRICT in the database too; this gives the clear message
+        if instance.led_teams.exists():
+            raise HasDependents(self.dependents_message.format(obj=instance))
+        super().perform_destroy(instance)
 
     def bulk_targets(self, data):
         qs = self.get_queryset().select_related("user__college")
