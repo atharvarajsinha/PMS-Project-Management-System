@@ -29,6 +29,7 @@ Once the backend exists, the live, generated version is at `/api/docs/` (Swagger
 21. [Frontend integration checklist](#21-frontend-integration-checklist)
 22. [Bulk delete](#22-bulk-delete)
 23. [CSV imports](#23-csv-imports)
+24. [Phase 2 — phases, mentors, teams, submissions, evaluations](#24-phase-2--phases-mentors-teams-submissions-evaluations)
 
 ---
 
@@ -165,13 +166,25 @@ Every non-2xx response has the same shape:
 
 ## 4. Enums
 
-| Enum | Values |
-|---|---|
-| `role` | `SUPER_ADMIN`, `ADMIN`, `FACULTY`, `STUDENT` |
-| `user_status` | `ACTIVE`, `INACTIVE` |
-| `college_status` | `ACTIVE`, `INACTIVE` |
+**Single source:** every enum (value + UI label) is defined once in `backend/apps/common/choices.py`.
+`GET /meta/choices/` returns them all as `{Group: [{value, label}]}`, and the frontend reads the generated copy
+`frontend/src/config/choices.generated.js` through `src/config/choices.js` (`labelOf`, `optionsOf`, constants).
+After changing `choices.py`, run `python manage.py export_choices` (a test fails if the copy is stale); changing a
+*value* also needs `makemigrations`.
 
-UI labels: `ADMIN` → "Admin", `SUPER_ADMIN` → "Super Admin".
+| Group | Values |
+|---|---|
+| `Role` | `SUPER_ADMIN`, `ADMIN`, `FACULTY`, `STUDENT` |
+| `AccountStatus` | `ACTIVE`, `INACTIVE` |
+| `CollegeStatus` | `ACTIVE`, `INACTIVE` |
+| `PhaseStatus` | `UPCOMING`, `OPEN`, `CLOSED`, `LOCKED` |
+| `SubmissionStatus` | `DRAFT`, `SUBMITTED` |
+| `LinkType` | `REPOSITORY`, `DOCUMENTATION`, `DEMO`, `PRESENTATION`, `GOOGLE_DRIVE`, `GOOGLE_FORM`, `VIDEO`, `OTHER` |
+| `TeamRole` | `LEAD`, `MEMBER` (derived: the member who is `team.lead`) |
+| `InviteStatus` | `PENDING`, `ACCEPTED`, `DECLINED`, `CANCELLED` |
+| `MentorStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `REMOVED` |
+| `EvaluatorSource` | `AUTO`, `ADMIN_OVERRIDE` |
+| `EvaluationStatus` | `PENDING`, `SUBMITTED` |
 
 ---
 
@@ -915,3 +928,113 @@ Response (dry run and real import have the same shape):
 ```
 `row` is the line number in the file (the header is line 1). `status` is `created` / `updated` / `skipped` / `error`.
 A real import writes one `import.{kind}` audit record plus the usual per-record audit records.
+
+---
+
+## 24. Phase 2 — phases, mentors, teams, submissions, evaluations
+
+Dates are calendar days in `TIME_ZONE` (default `Asia/Kolkata`), both ends inclusive. Students never receive marks
+from any endpoint.
+
+### Phase status (computed on every read; the job keeps the stored copy current)
+| Status | When |
+|---|---|
+| `UPCOMING` | today < `start_date` |
+| `OPEN` | `start_date` ≤ today ≤ `end_date` — submissions allowed |
+| `CLOSED` | today > `end_date` — evaluators enter marks |
+| `LOCKED` | locked by the Admin, or automatically after `evaluation_end_date` (not again once the Admin unlocks it) |
+
+### Phases · Admin
+| Method | Path | Notes |
+|---|---|---|
+| GET/POST | `/phases/` | filters `semester_id`, `semester_subject_id`, `subject_id`, `status`; rows carry `stats` |
+| GET/PATCH/DELETE | `/phases/{id}/` | PATCH refused while LOCKED; DELETE cascades submissions, assignments, marks |
+| POST | `/phases/bulk-delete/` | BulkResult |
+| POST | `/phases/{id}/lock/` · `/phases/{id}/unlock/` | lock only when CLOSED |
+| POST | `/phases/reorder/` | `{semester_subject_id, ids: [every phase id, in order]}` |
+
+Overlapping dates within a subject → `409 CONFLICT` (backed by a Postgres exclusion constraint). Also
+`end_date > start_date`, `evaluation_end_date ≥ end_date`, `max_marks > 0`, unique name per subject. Creating a phase
+gives every existing team its default evaluator for it.
+
+### Mentor list · Admin
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/semester-mentors/?semester_id=` | rows: `faculty`, `capacity`, `load` (= accepted teams), `accepted`, `pending`, `free` |
+| POST | `/semester-mentors/` | `{semester_id, faculty_ids: [], capacity?}` (default from settings) → `{created, failed}` |
+| PATCH | `/semester-mentors/{id}/` | `{capacity}`; can't go below accepted teams; reaching it auto-rejects waiting requests |
+| — | CSV import `mentors` | `semester, faculty_email, capacity?` per row (many semesters in one file); see §23 |
+| DELETE | `/semester-mentors/{id}/` · `POST /semester-mentors/bulk-delete/` | blocked while they hold teams (`HAS_DEPENDENTS`) |
+
+### Teams · Admin (works even when teams are locked)
+| Method | Path | Body / notes |
+|---|---|---|
+| GET | `/teams/` | filters `semester_id`, `semester_subject_id`, `subject_id`, `section_id`, `mentor_id`, `evaluator_id`, `incomplete`, `has_mentor`, `mentor_pending`, `evaluator_pending`; `search` |
+| POST | `/teams/` | `{semester_subject_id, lead_id, member_ids?}` |
+| GET/PATCH/DELETE | `/teams/{id}/` | PATCH `{name}` only |
+| POST | `/teams/{id}/add-member/` · `/remove-member/` · `/change-lead/` | `{student_id}` |
+| POST | `/teams/{id}/assign-mentor/` | `{faculty_id, replace=true, override_capacity=false}` |
+| POST | `/teams/{id}/remove-mentor/` | `{assignment_id}` |
+| POST | `/teams/{id}/set-evaluator/` | `{evaluator_id or null, phase_ids?}`; null resets to AUTO; no `phase_ids` = every unlocked phase. With cross-section evaluation off, the faculty must teach this subject in a section of a team member |
+| GET | `/teams/unassigned-students/?semester_subject_id=` | eligible students with no team for that subject |
+
+`Team`: `{id, name, display_name, semester_subject, lead, members[{…student, role, joined_at}], members_count,
+is_complete, mentors[{id, faculty, status}], evaluators[{id, phase, evaluator, source}], evaluator_pending,
+pending_invites[]}`.
+
+### Evaluations · Admin
+`GET /evaluations/` (filters `semester_id`, `semester_subject_id`, `phase_id`, `team_id`, `evaluator_id`,
+`evaluator_pending`, `evaluated`) → rows `{id, phase, semester_subject, team, evaluator, source, submission,
+evaluation, max_marks, can_edit_marks}`. `PUT /evaluations/{id}/marks/` (same body as the evaluator's) corrects marks the
+evaluator already entered (phase CLOSED, not locked). The Admin can't create an evaluation.
+
+### Student portal
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/my/projects/` | `{settings, student, subjects: [{semester_subject, team, is_lead, invites, phases[{…, submission, submission_progress, evaluation_start_date, evaluation_end_date, evaluation_progress}]}]}` — progress is PENDING/SUBMITTED and PENDING/COMPLETED; evaluation starts the day after the end date |
+| GET/POST | `/my/teams/` | POST `{semester_subject_id}` → I become Team Lead |
+| GET/DELETE | `/my/teams/{id}/` | DELETE = lead disbands (before the lock, nothing submitted) |
+| GET | `/my/teams/{id}/eligible-students/` | lead only |
+| POST | `/my/teams/{id}/invite/` `{student_id}` · `/cancel-invite/` `{invite_id}` | lead only |
+| POST | `/my/teams/{id}/remove-member/` · `/change-lead/` `{student_id}` · `/leave/` | |
+| GET | `/my/teams/{id}/mentors/` | the semester's mentor list, each `{faculty, available}` (no counts) |
+| POST | `/my/teams/{id}/request-mentor/` `{faculty_id}` · `/cancel-mentor-request/` | lead only; team must be at the minimum size; refused if the mentor is full |
+| GET | `/my/teams/{id}/invite-history/` | lead only: every invite and its answer (`status`, `is_automatic` = cancelled because the student joined another team, `responded_at`) |
+| GET | `/my/teams/{id}/mentor-requests/` | lead only: every request of the team and how it ended (`status`, `note`, `is_automatic`, `by_admin`) |
+| GET/PUT | `/my/teams/{id}/phases/{phase_id}/submission/` | PUT `{links: [{link_type, url, title?}], notes?, submit=true}` replaces the links; OPEN only |
+| GET | `/my/invites/` · POST `/my/invites/{id}/accept/` · `/decline/` | accepting cancels my other invites for that subject |
+
+Students change teams only while `team_formation_enabled` is on and `teams_locked` is off.
+
+### Faculty portal
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/my/mentoring/` | pending requests + accepted teams (`?status=` for one status) |
+| GET | `/my/mentoring/{id}/` | includes `phases` with submissions once accepted (no marks) |
+| POST | `/my/mentoring/{id}/accept/` · `/reject/` | `{note?}`; an accept that fills the last slot rejects the mentor's other pending requests (`is_automatic`) |
+| GET | `/my/mentoring/history/` | every answered/ended request, newest first (paginated) |
+| GET | `/my/evaluations/` · `/my/evaluations/phases/` | teams I evaluate; phase picker with progress counts |
+| PUT | `/my/evaluations/{id}/marks/` | `{default_marks?, student_marks?: [{student_id, marks}], remarks?, submit=true}` — marks are **per student**: `default_marks` applies to every member not listed in `student_marks`; every member must end up with 0..max; CLOSED only; no submission ⇒ all 0. Response `evaluation`: `{default_marks, student_marks[{student_id, name, roll_number, marks}], summary{min,max,avg}, …}` |
+| POST | `/my/evaluations/{id}/team-name/` | `{name}` (unique per subject) |
+| GET | `/my/class-sections/{id}/teams/{student_id}/` | class teacher: one student — per subject `team`, `phases[{…, evaluator, marks, evaluation_status, remarks, submission_progress, evaluation_progress}]`, `totals{marks, max_marks}` |
+| GET | `/my/class-sections/{id}/teams/` | class teacher: every student × subject → team, role, mentors, evaluator per phase |
+
+### Enforced by the database
+One team per student per subject, one pending invite per team + student, one active mentor assignment per
+team + faculty, one evaluator assignment per team + phase, no overlapping phase dates, marks within `0..max_marks`,
+a Team Lead can't be deleted (`RESTRICT`).
+
+### Job
+`GET /jobs/run/?token=` also returns `phases_updated` and `phases_auto_locked`.
+
+### Mentor capacity (updated)
+Only ACCEPTED teams use a mentor's slots. Several teams may have PENDING requests to the same mentor; the mentor
+chooses. When an accept (or an Admin assignment, or lowering the capacity) fills the last slot, all other PENDING
+requests to that mentor in that semester become REJECTED with `is_automatic = true`.
+
+### Emails
+Activation and password-reset emails are sent on a background thread after the request commits
+(`EMAIL_ASYNC`, default on; off under `manage.py test`). Failed sends stay in the outbox for the job.
+
+### Frontend refresh
+Every page refetches its data every 10 s while the tab is visible; the header's refresh button refetches now.

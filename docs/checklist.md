@@ -1,7 +1,8 @@
 # PMS — Feature Checklist
 
-Status as of 2026-10-23, audited against `docs/PRD.md` and `docs/roadmap.md` and the code in `backend/` and `frontend/`.
-Backend test suite: **69 tests, all passing** (Postgres, `manage.py test apps --noinput`). Updated 2026-10-23 after the email templates / CSV import / bulk delete / mapping work.
+Status as of 2026-11-14, audited against `docs/PRD.md` and `docs/roadmap.md` and the code in `backend/` and `frontend/`.
+Backend test suite: **121 tests, all passing** (Postgres, `manage.py test apps --noinput`). Updated 2026-11-14 after Phase 2 (projects & teams).
+Deployment (Render, Vercel, Brevo, UptimeRobot) is deferred until Phase 3 is complete.
 
 Legend: `[x]` done · `[~]` partial / not verified · `[ ]` not started
 
@@ -69,31 +70,71 @@ Legend: `[x]` done · `[~]` partial / not verified · `[ ]` not started
 - [x] PWA shell (manifest, service worker, update prompt, offline banner), light/dark theme
 - [x] MSW mock mode for frontend (`npm run dev:mock`)
 
-### ❗ What's left in Phase 1
+### ❗ What's left in Phase 1 (deployment items deferred until after Phase 3)
 - [ ] **Deploy backend to Render** (service, Postgres, env vars, start command `migrate && gunicorn`)
 - [ ] **Deploy frontend to Vercel** — `frontend/vercel.json` still has the `<render-service>` placeholder
 - [ ] **Production email** — configure Brevo SMTP env vars on Render (code is SMTP-generic; only config needed)
 - [ ] **UptimeRobot monitor** on `/api/v1/jobs/run/?token=<JOBS_SECRET>` every 5 min
-- [ ] **Version control** — project is not a git repository yet
+- [x] **Version control** — git repository initialised
 - [x] **End-to-end check against the live backend** (2026-10-23): every page for Admin, Faculty, Student and Super Admin (incl. managing a college) loads with no console/HTTP errors; profile save, import, bulk delete and mapping grid exercised. Not exercised in the browser: activation emails (real SMTP) and the password-reset flow (covered by backend tests)
 - [ ] MSW mock mode has no handlers for `/imports/` and `bulk-delete` yet (those features need the real backend)
-- [~] Student dashboard is a placeholder (real content depends on Phase 2 teams/phases)
+- [x] Student dashboard: subjects, teams joined, pending invites, phase deadlines (Phase 2)
 - [~] Super Admin dashboard is built from the colleges list only (aggregates planned for Phase 3)
-- [ ] Frontend tests (none exist; backend has 58)
+- [ ] Frontend tests (none exist; backend has 121)
 
 ---
 
-## Phase 2 — Projects & teams (not started)
-- [ ] Phases: dates, max marks, order, no overlap (exclusion constraint), status UPCOMING/OPEN/CLOSED/LOCKED, evaluation lock
-- [ ] Semester mentor list + per-faculty capacity
-- [ ] Teams per semester-subject: create, invite/join, Team Lead, size rules, formation on/off, global lock
-- [ ] Mentor requests: FCFS, concurrency-safe accept/reject, admin reassign
-- [ ] Evaluator auto-assignment (subject + Team Lead's section) + admin override, cross-section setting
-- [ ] Phase submissions + links (DRAFT/SUBMITTED, closes at phase end date)
-- [ ] Evaluations & marks: 0 for missing submission, lock/unlock, audit; Admin cannot evaluate
-- [ ] Team naming by evaluator
-- [ ] Job endpoint: phase status updates / auto-lock
-- [ ] Frontend screens for all of the above (admin, faculty-as-mentor/evaluator, student)
+## Phase 2 — Projects & teams (built 2026-11-14)
+Apps: `projects` (phases, submissions), `teams` (mentor lists, teams, invites, mentor requests), `evaluations`
+(evaluator assignments, marks). API: `docs/API.md` §24.
+
+### Central choices
+- [x] Every status/role/type list lives once in `backend/apps/common/choices.py` (models alias it, e.g. `User.Role`)
+- [x] `GET /meta/choices/` + generated `frontend/src/config/choices.generated.js` (`manage.py export_choices`); a test fails if it's stale
+- [x] Frontend uses `src/config/choices.js` (`labelOf`, `optionsOf`, constants); hard-coded role/status label dicts removed; `StatusBadge group=…`
+
+### Backend
+- [x] Phases: dates, max marks, order/reorder, unique name, no overlap (Postgres exclusion constraint + friendly 409), status UPCOMING/OPEN/CLOSED/LOCKED computed from dates, manual lock/unlock, auto-lock after `evaluation_end_date` (not again after a manual unlock)
+- [x] Semester mentor list + per-faculty capacity (can't drop below current load; can't remove while holding teams)
+- [x] Teams per semester-subject: create, invite → accept/decline, leave, remove, change lead, disband; eligibility by section mapping; one team per student per subject (DB unique); max size under row lock; min size → "incomplete"; formation on/off; global lock (students frozen, Admin can still change)
+- [x] Mentor requests: FCFS within capacity under a row lock (pending + accepted hold a slot), accept/reject, cancel; Admin assign/replace/remove, optional over-capacity, multiple mentors
+- [x] Evaluator auto-assignment (subject + Team Lead's section) per phase; re-syncs on lead change (before lock), new phase, section-subject faculty change (signal: API, CSV import, grid); "evaluator pending" when no faculty; Admin override per phase with cross-section rule; reset to AUTO
+- [x] Submissions: one per team per phase, multiple typed links, DRAFT/SUBMITTED, any member, OPEN only (dates checked directly)
+- [x] Evaluations: CLOSED and unlocked only, marks ≤ max, 0 when nothing submitted, draft/submit, Admin corrections only (Admin never evaluates first), all changes audited; students never receive marks
+- [x] Team naming by any evaluator of the team (or Admin), unique per subject
+- [x] Job endpoint also syncs phase statuses / auto-lock
+- [x] Guards: Team Lead can't be deleted (RESTRICT + clear 409); a student in a team can't be moved to a section that doesn't take that subject
+- [x] **Add-on:** class teacher sees each student of their section × subject → team, role, mentor(s), evaluator per phase (`/my/class-sections/{id}/teams/`)
+- [x] `TIME_ZONE` setting (default `Asia/Kolkata`) so "today" for phase dates is the college's day
+- [x] 52 new tests (121 total)
+
+### Frontend
+- [x] Admin: Phases, Mentors, Teams (detail sheet: rename, members, lead, mentor, evaluator per phase; "students without a team" tab), Evaluations (with mark corrections)
+- [x] Faculty: Mentoring (requests + mentored teams with submissions), Evaluations (phase picker, links, marks, team naming), Section → "Students' teams"
+- [x] Student: My Projects (create/join/invite/leave, mentor choice, link submissions) and a real dashboard
+- [x] Browser check against the live backend with `seed_demo` data (2026-11-14): admin, faculty and student flows, no server errors
+
+### Round 2 updates (2026-11-14)
+- [x] Auto-refresh every 10 s on every page (paused while the tab is hidden) + refresh button in the header
+- [x] Emails sent on a background thread after commit (`EMAIL_ASYNC`); OTP too; outbox job still retries
+- [x] Mentors CSV import (`semester, faculty_email, capacity`) — many semesters in one file; Import CSV on the Mentors page
+- [x] New team dialog hides students already picked
+- [x] Students see mentors only as Available / Full; capacity counts accepted teams; filling the last slot auto-rejects waiting requests
+- [x] Mentor history for faculty (`/my/mentoring/history/`) and request history for the Team Lead (`/my/teams/{id}/mentor-requests/`)
+- [x] Marks per student: "marks for everyone" + individual overrides (`student_marks` table; old team marks copied to each member by migration)
+- [x] 129 backend tests passing
+- [ ] Browser check of this round (demo login no longer available in the dev DB)
+- [x] Team delete removes members, invites, mentor requests, submissions + links, evaluator assignments, evaluations and per-student marks (database cascade; covered by a test)
+- [x] Marks inputs masked like passwords (frontend only, show/hide eye, digits only, ignored by password managers)
+- [x] Invite history for the Team Lead (accepted / declined / cancelled, incl. "joined another team")
+- [x] Class teacher: "Details & marks" modal per student — evaluator and that student's marks for every phase, totals per subject
+- [x] Student project card: "Submission: start–end · Pending/Submitted" and "Evaluation: end+1 – evaluation end · Pending/Completed" (new central choices `SubmissionProgress`, `EvaluationProgress`)
+- [x] 133 backend tests passing
+
+### Left / not done
+- [ ] MSW mock handlers for Phase 2 endpoints (mock mode doesn't cover these screens)
+- [ ] Notifications for invites, mentor decisions and deadlines (Phase 3 notifications)
+- [ ] Faculty dashboard tiles for mentoring/evaluation counts (Phase 3 dashboards)
 
 ## Phase 3 — Remaining features (not started)
 - [ ] Notifications: in-app, email, push + push subscriptions

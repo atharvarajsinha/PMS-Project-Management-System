@@ -165,6 +165,126 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/evaluations/:
+    get:
+      operationId: evaluations_list
+      description: /evaluations/ — every team × phase with its evaluator, submission
+        and marks.
+      parameters:
+      - in: query
+        name: evaluated
+        schema:
+          type: boolean
+      - in: query
+        name: evaluator_id
+        schema:
+          type: number
+      - in: query
+        name: evaluator_pending
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: phase, team (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: phase_id
+        schema:
+          type: number
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: number
+      - in: query
+        name: team_id
+        schema:
+          type: number
+      tags:
+      - evaluations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssignmentList'
+          description: ''
+  /api/v1/evaluations/{id}/:
+    get:
+      operationId: evaluations_retrieve
+      description: /evaluations/ — every team × phase with its evaluator, submission
+        and marks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluator assignment.
+        required: true
+      tags:
+      - evaluations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/v1/evaluations/{id}/marks/:
+    put:
+      operationId: evaluations_marks_update
+      description: Correct marks the evaluator already entered (phase must be unlocked
+        and past its end date).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluator assignment.
+        required: true
+      tags:
+      - evaluations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarksRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
   /api/v1/faculty/:
     get:
       operationId: faculty_list
@@ -548,6 +668,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/meta/choices/:
+    get:
+      operationId: meta_choices_retrieve
+      description: GET /meta/choices/ — every status/type list (same data as frontend/src/config/choices.generated.js).
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
           description: ''
   /api/v1/my/class-sections/:
     get:
@@ -935,6 +1071,58 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/my/class-sections/{section_pk}/teams/:
+    get:
+      operationId: my_class_sections_teams_retrieve
+      description: GET /my/class-sections/{section_pk}/teams/ — where each of my students
+        stands, per subject.
+      parameters:
+      - in: path
+        name: section_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/class-sections/{section_pk}/teams/{student_pk}/:
+    get:
+      operationId: my_class_sections_teams_retrieve_2
+      description: |-
+        GET /my/class-sections/{section_pk}/teams/{student_pk}/ — one student of my section:
+        every subject → team, mentor, and per phase the evaluator, progress and this student's marks.
+      parameters:
+      - in: path
+        name: section_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: student_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/my/dashboard/:
     get:
       operationId: my_dashboard_retrieve
@@ -942,6 +1130,410 @@ paths:
         sections and teaching.
       tags:
       - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/evaluations/:
+    get:
+      operationId: my_evaluations_list
+      description: For views whose data belongs to one college.
+      parameters:
+      - in: query
+        name: evaluated
+        schema:
+          type: boolean
+      - in: query
+        name: evaluator_id
+        schema:
+          type: number
+      - in: query
+        name: evaluator_pending
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: phase, team (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: phase_id
+        schema:
+          type: number
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: number
+      - in: query
+        name: team_id
+        schema:
+          type: number
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssignmentList'
+          description: ''
+  /api/v1/my/evaluations/{id}/:
+    get:
+      operationId: my_evaluations_retrieve
+      description: For views whose data belongs to one college.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluator assignment.
+        required: true
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/v1/my/evaluations/{id}/marks/:
+    put:
+      operationId: my_evaluations_marks_update
+      description: For views whose data belongs to one college.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluator assignment.
+        required: true
+      tags:
+      - faculty-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarksRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/v1/my/evaluations/{id}/team-name/:
+    post:
+      operationId: my_evaluations_team_name_create
+      description: Name (or rename) the team. Any evaluator of the team may do this.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this evaluator assignment.
+        required: true
+      tags:
+      - faculty-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamNameRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+          description: ''
+  /api/v1/my/evaluations/phases/:
+    get:
+      operationId: my_evaluations_phases_retrieve
+      description: Phases where I evaluate at least one team, with progress counts
+        (for the picker).
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/invites/:
+    get:
+      operationId: my_invites_list
+      description: /my/invites/ — pending invites to join a team.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInviteListList'
+          description: ''
+  /api/v1/my/invites/{id}/accept/:
+    post:
+      operationId: my_invites_accept_create
+      description: /my/invites/ — pending invites to join a team.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team invite.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/my/invites/{id}/decline/:
+    post:
+      operationId: my_invites_decline_create
+      description: /my/invites/ — pending invites to join a team.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team invite.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/my/mentoring/:
+    get:
+      operationId: my_mentoring_retrieve
+      description: 'Default: pending requests and teams I mentor. ?status= for one
+        status (e.g. REJECTED).'
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - ACCEPTED
+          - CANCELLED
+          - PENDING
+          - REJECTED
+          - REMOVED
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/mentoring/{id}/:
+    get:
+      operationId: my_mentoring_retrieve_2
+      description: One request/team, with the team's phases and submitted links once
+        I've accepted.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this mentor assignment.
+        required: true
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/mentoring/{id}/accept/:
+    post:
+      operationId: my_mentoring_accept_create
+      description: For views whose data belongs to one college.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this mentor assignment.
+        required: true
+      tags:
+      - faculty-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/mentoring/{id}/reject/:
+    post:
+      operationId: my_mentoring_reject_create
+      description: For views whose data belongs to one college.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this mentor assignment.
+        required: true
+      tags:
+      - faculty-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/mentoring/history/:
+    get:
+      operationId: my_mentoring_history_list
+      description: 'Every request I answered (or that ended): accepted, rejected (incl.
+        automatic), cancelled, removed.'
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - faculty-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMentorHistoryList'
+          description: ''
+  /api/v1/my/projects/:
+    get:
+      operationId: my_projects_retrieve
+      description: GET /my/projects/ — every subject I take, with my team (or invites)
+        and its phases.
+      tags:
+      - student-portal
       security:
       - cookieAuth: []
       responses:
@@ -1066,6 +1658,857 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedStudentList'
+          description: ''
+  /api/v1/my/teams/:
+    get:
+      operationId: my_teams_list
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeamList'
+          description: ''
+    post:
+      operationId: my_teams_create
+      description: POST {semester_subject_id} — create a team; I become its Team Lead.
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/:
+    get:
+      operationId: my_teams_retrieve
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    delete:
+      operationId: my_teams_destroy
+      description: Team Lead disbands the team (before the lock, nothing submitted
+        yet).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/my/teams/{id}/cancel-invite/:
+    post:
+      operationId: my_teams_cancel_invite_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/cancel-mentor-request/:
+    post:
+      operationId: my_teams_cancel_mentor_request_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/change-lead/:
+    post:
+      operationId: my_teams_change_lead_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/eligible-students/:
+    get:
+      operationId: my_teams_eligible_students_list
+      description: 'Students I can invite: they take this subject and have no team
+        for it yet.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudentBriefList'
+          description: ''
+  /api/v1/my/teams/{id}/invite/:
+    post:
+      operationId: my_teams_invite_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/invite-history/:
+    get:
+      operationId: my_teams_invite_history_list
+      description: 'Team Lead: every invite sent and whether it was accepted, declined
+        or cancelled.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInviteHistoryList'
+          description: ''
+  /api/v1/my/teams/{id}/leave/:
+    post:
+      operationId: my_teams_leave_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/my/teams/{id}/mentor-requests/:
+    get:
+      operationId: my_teams_mentor_requests_list
+      description: 'Team Lead: every mentor request of the team and how each mentor
+        answered.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMentorHistoryList'
+          description: ''
+  /api/v1/my/teams/{id}/mentors/:
+    get:
+      operationId: my_teams_mentors_list
+      description: This semester's mentor list, each marked available or full (no
+        slot counts).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAvailableMentorList'
+          description: ''
+  /api/v1/my/teams/{id}/phases/:
+    get:
+      operationId: my_teams_phases_retrieve
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/my/teams/{id}/phases/{phase_id}/submission/:
+    get:
+      operationId: my_teams_phases_submission_retrieve
+      description: Any member may save the team's links for a phase while it is OPEN.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - in: path
+        name: phase_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - student-portal
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          description: ''
+    put:
+      operationId: my_teams_phases_submission_update
+      description: Any member may save the team's links for a phase while it is OPEN.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      - in: path
+        name: phase_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionWriteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          description: ''
+  /api/v1/my/teams/{id}/remove-member/:
+    post:
+      operationId: my_teams_remove_member_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/my/teams/{id}/request-mentor/:
+    post:
+      operationId: my_teams_request_mentor_create
+      description: /my/teams/ — teams I'm in. The Team Lead manages members, invites
+        and the mentor request.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - student-portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MentorRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/phases/:
+    get:
+      operationId: phases_list
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: start_date, order, name (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: number
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - CLOSED
+          - LOCKED
+          - OPEN
+          - UPCOMING
+        description: |-
+          * `UPCOMING` - Upcoming
+          * `OPEN` - Open
+          * `CLOSED` - Closed
+          * `LOCKED` - Locked
+      - in: query
+        name: subject_id
+        schema:
+          type: number
+      tags:
+      - phases
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPhaseList'
+          description: ''
+    post:
+      operationId: phases_create
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      tags:
+      - phases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phase'
+          description: ''
+  /api/v1/phases/{id}/:
+    get:
+      operationId: phases_retrieve
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this phase.
+        required: true
+      tags:
+      - phases
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phase'
+          description: ''
+    patch:
+      operationId: phases_partial_update
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this phase.
+        required: true
+      tags:
+      - phases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPhaseRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phase'
+          description: ''
+    delete:
+      operationId: phases_destroy
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this phase.
+        required: true
+      tags:
+      - phases
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/phases/{id}/lock/:
+    post:
+      operationId: phases_lock_create
+      description: 'Lock evaluation: no mark changes until unlocked.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this phase.
+        required: true
+      tags:
+      - phases
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phase'
+          description: ''
+  /api/v1/phases/{id}/unlock/:
+    post:
+      operationId: phases_unlock_create
+      description: Unlock for corrections. It then stays unlocked until locked again
+        by hand.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this phase.
+        required: true
+      tags:
+      - phases
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phase'
+          description: ''
+  /api/v1/phases/bulk-delete/:
+    post:
+      operationId: phases_bulk_delete_create
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      tags:
+      - phases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkIdsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/phases/reorder/:
+    post:
+      operationId: phases_reorder_create
+      description: Deletes each id in its own savepoint, so one blocked row never
+        stops the rest.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: start_date, order, name (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: number
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - CLOSED
+          - LOCKED
+          - OPEN
+          - UPCOMING
+        description: |-
+          * `UPCOMING` - Upcoming
+          * `OPEN` - Open
+          * `CLOSED` - Closed
+          * `LOCKED` - Locked
+      - in: query
+        name: subject_id
+        schema:
+          type: number
+      tags:
+      - phases
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPhaseList'
           description: ''
   /api/v1/platform/colleges/:
     get:
@@ -1816,6 +3259,164 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/semester-mentors/:
+    get:
+      operationId: semester_mentors_list
+      description: /semester-mentors/ — which faculty may mentor in a semester, with
+        capacity and current load.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: name, capacity, load (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      tags:
+      - mentors
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSemesterMentorList'
+          description: ''
+    post:
+      operationId: semester_mentors_create
+      description: Add one or more faculty to a semester's mentor list (already-listed
+        ones are skipped).
+      tags:
+      - mentors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterMentorCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/semester-mentors/{id}/:
+    get:
+      operationId: semester_mentors_retrieve
+      description: /semester-mentors/ — which faculty may mentor in a semester, with
+        capacity and current load.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this semester mentor.
+        required: true
+      tags:
+      - mentors
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemesterMentor'
+          description: ''
+    patch:
+      operationId: semester_mentors_partial_update
+      description: /semester-mentors/ — which faculty may mentor in a semester, with
+        capacity and current load.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this semester mentor.
+        required: true
+      tags:
+      - mentors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSemesterMentorUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemesterMentor'
+          description: ''
+    delete:
+      operationId: semester_mentors_destroy
+      description: /semester-mentors/ — which faculty may mentor in a semester, with
+        capacity and current load.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this semester mentor.
+        required: true
+      tags:
+      - mentors
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/semester-mentors/bulk-delete/:
+    post:
+      operationId: semester_mentors_bulk_delete_create
+      description: /semester-mentors/ — which faculty may mentor in a semester, with
+        capacity and current load.
+      tags:
+      - mentors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkIdsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/semester-subjects/:
     get:
       operationId: semester_subjects_list
@@ -2547,8 +4148,517 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/teams/:
+    get:
+      operationId: teams_list
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: query
+        name: evaluator_id
+        schema:
+          type: number
+      - in: query
+        name: evaluator_pending
+        schema:
+          type: boolean
+      - in: query
+        name: has_mentor
+        schema:
+          type: boolean
+      - in: query
+        name: incomplete
+        schema:
+          type: boolean
+      - in: query
+        name: mentor_id
+        schema:
+          type: number
+      - in: query
+        name: mentor_pending
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: 'Order by: name, created_at, members_count (prefix - for descending).'
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: section_id
+        schema:
+          type: number
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: number
+      - in: query
+        name: subject_id
+        schema:
+          type: number
+      tags:
+      - teams
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeamList'
+          description: ''
+    post:
+      operationId: teams_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/:
+    get:
+      operationId: teams_retrieve
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    patch:
+      operationId: teams_partial_update
+      description: Only the name can be edited here; use the actions for members,
+        lead, mentors and evaluators.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamNameRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    delete:
+      operationId: teams_destroy
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/teams/{id}/add-member/:
+    post:
+      operationId: teams_add_member_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/assign-mentor/:
+    post:
+      operationId: teams_assign_mentor_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MentorAssignRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/change-lead/:
+    post:
+      operationId: teams_change_lead_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/remove-member/:
+    post:
+      operationId: teams_remove_member_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/remove-mentor/:
+    post:
+      operationId: teams_remove_mentor_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentIdRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/{id}/set-evaluator/:
+    post:
+      operationId: teams_set_evaluator_create
+      description: Override the evaluator for some or all phases; evaluator_id=null
+        resets them to automatic.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluatorOverrideRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/v1/teams/bulk-delete/:
+    post:
+      operationId: teams_bulk_delete_create
+      description: /teams/ — the Admin sees and changes every team, locked or not.
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkIdsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/teams/unassigned-students/:
+    get:
+      operationId: teams_unassigned_students_list
+      description: Eligible students of an offering who are not in any of its teams
+        (paginated).
+      parameters:
+      - in: query
+        name: evaluator_id
+        schema:
+          type: number
+      - in: query
+        name: evaluator_pending
+        schema:
+          type: boolean
+      - in: query
+        name: has_mentor
+        schema:
+          type: boolean
+      - in: query
+        name: incomplete
+        schema:
+          type: boolean
+      - in: query
+        name: mentor_id
+        schema:
+          type: number
+      - in: query
+        name: mentor_pending
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: section_id
+        schema:
+          type: number
+      - in: query
+        name: semester_id
+        schema:
+          type: number
+      - in: query
+        name: semester_subject_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: subject_id
+        schema:
+          type: number
+      tags:
+      - teams
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudentBriefList'
+          description: ''
 components:
   schemas:
+    Assignment:
+      type: object
+      description: One team in one phase, for its evaluator or the Admin. Includes
+        marks — never shown to students.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        phase:
+          $ref: '#/components/schemas/PhaseBrief'
+        semester_subject:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        team:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        evaluator:
+          allOf:
+          - $ref: '#/components/schemas/FacultyBrief'
+          nullable: true
+        source:
+          $ref: '#/components/schemas/SourceEnum'
+        submission:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        evaluation:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        max_marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        can_edit_marks:
+          type: boolean
+          readOnly: true
+      required:
+      - can_edit_marks
+      - evaluation
+      - evaluator
+      - id
+      - max_marks
+      - phase
+      - semester_subject
+      - submission
+      - team
+    AssignmentIdRequest:
+      type: object
+      properties:
+        assignment_id:
+          type: integer
+          minimum: 1
+      required:
+      - assignment_id
+    AvailableMentor:
+      type: object
+      description: 'What a student sees when choosing a mentor: available or full,
+        never the counts.'
+      properties:
+        faculty:
+          $ref: '#/components/schemas/FacultyBrief'
+        available:
+          type: boolean
+          readOnly: true
+      required:
+      - available
+      - faculty
     BulkIdsRequest:
       type: object
       properties:
@@ -2705,7 +4815,7 @@ components:
           minLength: 2
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/Status372Enum'
           readOnly: true
         contact_email:
           type: string
@@ -2757,7 +4867,7 @@ components:
           maxLength: 30
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/Status372Enum'
           readOnly: true
         must_change_password:
           type: boolean
@@ -2847,6 +4957,26 @@ components:
       - teams_locked_at
       - updated_at
       - updated_by
+    DecisionRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          default: ''
+          maxLength: 500
+    EvaluatorOverrideRequest:
+      type: object
+      properties:
+        evaluator_id:
+          type: integer
+          nullable: true
+        phase_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - evaluator_id
     Faculty:
       type: object
       description: Common user fields exposed on Faculty/Student/CollegeAdmin payloads.
@@ -3038,6 +5168,118 @@ components:
       required:
       - email
       - name
+    InviteHistory:
+      type: object
+      description: One invite of a team and how the student answered.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        student:
+          $ref: '#/components/schemas/StudentBrief'
+        status:
+          $ref: '#/components/schemas/InviteHistoryStatusEnum'
+        is_automatic:
+          type: boolean
+        invited_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        responded_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - created_at
+      - id
+      - student
+    InviteHistoryStatusEnum:
+      enum:
+      - PENDING
+      - ACCEPTED
+      - DECLINED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `ACCEPTED` - Accepted
+        * `DECLINED` - Declined
+        * `CANCELLED` - Cancelled
+    InviteIdRequest:
+      type: object
+      properties:
+        invite_id:
+          type: integer
+          minimum: 1
+      required:
+      - invite_id
+    InviteList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team_id:
+          type: integer
+        team_name:
+          type: string
+        lead:
+          type: string
+        subject:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - lead
+      - subject
+      - team_id
+      - team_name
+    LinkInputRequest:
+      type: object
+      properties:
+        link_type:
+          allOf:
+          - $ref: '#/components/schemas/LinkTypeEnum'
+          default: OTHER
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 1000
+        title:
+          type: string
+          default: ''
+          maxLength: 200
+      required:
+      - url
+    LinkTypeEnum:
+      enum:
+      - REPOSITORY
+      - DOCUMENTATION
+      - DEMO
+      - PRESENTATION
+      - GOOGLE_DRIVE
+      - GOOGLE_FORM
+      - VIDEO
+      - OTHER
+      type: string
+      description: |-
+        * `REPOSITORY` - Repository
+        * `DOCUMENTATION` - Documentation
+        * `DEMO` - Demo
+        * `PRESENTATION` - Presentation
+        * `GOOGLE_DRIVE` - Google Drive
+        * `GOOGLE_FORM` - Google Form
+        * `VIDEO` - Video
+        * `OTHER` - Other
     LoginRequest:
       type: object
       properties:
@@ -3051,6 +5293,26 @@ components:
       required:
       - email
       - password
+    MarksRequest:
+      type: object
+      description: '`default_marks` applies to every member; `student_marks` overrides
+        it per student.'
+      properties:
+        default_marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          nullable: true
+        student_marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentMarkInputRequest'
+        remarks:
+          type: string
+          maxLength: 5000
+        submit:
+          type: boolean
+          default: true
     Me:
       type: object
       properties:
@@ -3070,7 +5332,7 @@ components:
         role:
           $ref: '#/components/schemas/RoleEnum'
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/Status372Enum'
         must_change_password:
           type: boolean
         last_login_at:
@@ -3100,6 +5362,136 @@ components:
       - name
       - role
       - student
+    MentorAssignRequest:
+      type: object
+      properties:
+        faculty_id:
+          type: integer
+        replace:
+          type: boolean
+          default: true
+        override_capacity:
+          type: boolean
+          default: false
+      required:
+      - faculty_id
+    MentorHistory:
+      type: object
+      description: One mentor request/assignment and how it ended.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        faculty:
+          $ref: '#/components/schemas/FacultyBrief'
+        team:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/MentorHistoryStatusEnum'
+        note:
+          type: string
+          maxLength: 500
+        is_automatic:
+          type: boolean
+        by_admin:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - by_admin
+      - created_at
+      - faculty
+      - id
+      - team
+    MentorHistoryStatusEnum:
+      enum:
+      - PENDING
+      - ACCEPTED
+      - REJECTED
+      - CANCELLED
+      - REMOVED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `ACCEPTED` - Accepted
+        * `REJECTED` - Rejected
+        * `CANCELLED` - Cancelled
+        * `REMOVED` - Removed
+    MentorRequestRequest:
+      type: object
+      properties:
+        faculty_id:
+          type: integer
+      required:
+      - faculty_id
+    OfferingBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+        semester:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        subject:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - id
+      - semester
+      - subject
+    PaginatedAssignmentList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
+    PaginatedAvailableMentorList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailableMentor'
     PaginatedClassStudentList:
       type: object
       required:
@@ -3142,6 +5534,90 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Faculty'
+    PaginatedInviteHistoryList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InviteHistory'
+    PaginatedInviteListList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InviteList'
+    PaginatedMentorHistoryList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MentorHistory'
+    PaginatedPhaseList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Phase'
     PaginatedPlatformCollegeList:
       type: object
       required:
@@ -3226,6 +5702,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Semester'
+    PaginatedSemesterMentorList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SemesterMentor'
     PaginatedSemesterSubjectList:
       type: object
       required:
@@ -3247,6 +5744,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SemesterSubject'
+    PaginatedStudentBriefList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentBrief'
     PaginatedStudentList:
       type: object
       required:
@@ -3310,6 +5828,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Teaching'
+    PaginatedTeamList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
     PasswordResetConfirmRequest:
       type: object
       properties:
@@ -3432,6 +5971,34 @@ components:
           type: string
           nullable: true
           maxLength: 30
+    PatchedPhaseRequest:
+      type: object
+      properties:
+        semester_subject_id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        short_description:
+          type: string
+          maxLength: 300
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        evaluation_end_date:
+          type: string
+          format: date
+          nullable: true
+        max_marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
     PatchedPlatformCollegeRequest:
       type: object
       properties:
@@ -3479,6 +6046,13 @@ components:
           type: integer
           writeOnly: true
           nullable: true
+    PatchedSemesterMentorUpdateRequest:
+      type: object
+      properties:
+        capacity:
+          type: integer
+          maximum: 100
+          minimum: 1
     PatchedSemesterRequest:
       type: object
       properties:
@@ -3521,6 +6095,160 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+    PatchedTeamNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+    Phase:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        semester_subject_id:
+          type: integer
+        semester_subject:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        short_description:
+          type: string
+          maxLength: 300
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        evaluation_end_date:
+          type: string
+          format: date
+          nullable: true
+        max_marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        order:
+          type: integer
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        locked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        locked_by:
+          allOf:
+          - $ref: '#/components/schemas/UserBrief'
+          readOnly: true
+          nullable: true
+        unlocked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        stats:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - end_date
+      - id
+      - locked_at
+      - locked_by
+      - max_marks
+      - name
+      - order
+      - semester_subject
+      - semester_subject_id
+      - start_date
+      - stats
+      - status
+      - unlocked_at
+      - updated_at
+    PhaseBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        order:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        evaluation_end_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+      required:
+      - end_date
+      - evaluation_end_date
+      - id
+      - name
+      - order
+      - start_date
+      - status
+    PhaseRequest:
+      type: object
+      properties:
+        semester_subject_id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        short_description:
+          type: string
+          maxLength: 300
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        evaluation_end_date:
+          type: string
+          format: date
+          nullable: true
+        max_marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+      required:
+      - end_date
+      - max_marks
+      - name
+      - semester_subject_id
+      - start_date
     PlatformCollege:
       type: object
       properties:
@@ -3536,7 +6264,7 @@ components:
           minLength: 2
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/Status372Enum'
           readOnly: true
         contact_email:
           type: string
@@ -3598,6 +6326,22 @@ components:
       required:
       - code
       - name
+    ReorderRequest:
+      type: object
+      properties:
+        semester_subject_id:
+          type: integer
+          minimum: 1
+        ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          maxItems: 50
+          minItems: 1
+      required:
+      - ids
+      - semester_subject_id
     RoleEnum:
       enum:
       - SUPER_ADMIN
@@ -3888,6 +6632,76 @@ components:
       required:
       - id
       - semester_number
+    SemesterMentor:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        semester_id:
+          type: integer
+          readOnly: true
+        faculty:
+          allOf:
+          - $ref: '#/components/schemas/FacultyBrief'
+          readOnly: true
+        faculty_status:
+          type: string
+          readOnly: true
+        capacity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        load:
+          type: integer
+          readOnly: true
+          default: 0
+        accepted:
+          type: integer
+          readOnly: true
+          default: 0
+        pending:
+          type: integer
+          readOnly: true
+          default: 0
+        free:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - accepted
+      - capacity
+      - created_at
+      - faculty
+      - faculty_status
+      - free
+      - id
+      - load
+      - pending
+      - semester_id
+    SemesterMentorCreateRequest:
+      type: object
+      properties:
+        semester_id:
+          type: integer
+          minimum: 1
+        faculty_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          maxItems: 500
+          minItems: 1
+        capacity:
+          type: integer
+          maximum: 100
+          minimum: 1
+      required:
+      - faculty_ids
+      - semester_id
     SemesterRequest:
       type: object
       properties:
@@ -3938,7 +6752,15 @@ components:
       required:
       - semester_id
       - subject_id
-    StatusEnum:
+    SourceEnum:
+      enum:
+      - AUTO
+      - ADMIN_OVERRIDE
+      type: string
+      description: |-
+        * `AUTO` - Automatic
+        * `ADMIN_OVERRIDE` - Set by Admin
+    Status372Enum:
       enum:
       - ACTIVE
       - INACTIVE
@@ -4014,6 +6836,29 @@ components:
       - status
       - updated_at
       - user_id
+    StudentBrief:
+      type: object
+      description: Student as {id (student id), name, email, roll_number, section}.
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        roll_number:
+          type: string
+        section:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - email
+      - id
+      - name
+      - roll_number
+      - section
     StudentBulkRequest:
       type: object
       description: Exactly one of ids / section_id / semester_id.
@@ -4029,6 +6874,26 @@ components:
           type: integer
         semester_id:
           type: integer
+    StudentIdRequest:
+      type: object
+      properties:
+        student_id:
+          type: integer
+      required:
+      - student_id
+    StudentMarkInputRequest:
+      type: object
+      properties:
+        student_id:
+          type: integer
+          minimum: 1
+        marks:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+      required:
+      - marks
+      - student_id
     StudentRequest:
       type: object
       description: Common user fields exposed on Faculty/Student/CollegeAdmin payloads.
@@ -4132,6 +6997,88 @@ components:
       required:
       - code
       - name
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        phase_id:
+          type: integer
+          readOnly: true
+        team_id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/SubmissionStatusEnum'
+        notes:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmissionLink'
+          readOnly: true
+        submitted_by:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - links
+      - phase_id
+      - submitted_by
+      - team_id
+      - updated_at
+    SubmissionLink:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        link_type:
+          $ref: '#/components/schemas/LinkTypeEnum'
+        url:
+          type: string
+          format: uri
+          maxLength: 1000
+        title:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - url
+    SubmissionStatusEnum:
+      enum:
+      - DRAFT
+      - SUBMITTED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `SUBMITTED` - Submitted
+    SubmissionWriteRequest:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkInputRequest'
+        notes:
+          type: string
+          maxLength: 5000
+        submit:
+          type: boolean
+          default: true
+      required:
+      - links
     Teaching:
       type: object
       description: A faculty member's own section-subject assignment.
@@ -4176,6 +7123,98 @@ components:
       - semester
       - students_count
       - subject
+    Team:
+      type: object
+      description: Full team view. Never includes marks (students see this too).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        display_name:
+          type: string
+          readOnly: true
+        semester_subject:
+          allOf:
+          - $ref: '#/components/schemas/OfferingBrief'
+          readOnly: true
+        lead:
+          allOf:
+          - $ref: '#/components/schemas/StudentBrief'
+          readOnly: true
+        members:
+          type: array
+          items: {}
+          readOnly: true
+        members_count:
+          type: integer
+          readOnly: true
+        is_complete:
+          type: boolean
+          readOnly: true
+        mentors:
+          type: array
+          items: {}
+          readOnly: true
+        evaluators:
+          type: array
+          items: {}
+          readOnly: true
+        evaluator_pending:
+          type: boolean
+          readOnly: true
+        pending_invites:
+          type: array
+          items: {}
+          readOnly: true
+        name_set_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - display_name
+      - evaluator_pending
+      - evaluators
+      - id
+      - is_complete
+      - lead
+      - members
+      - members_count
+      - mentors
+      - name
+      - pending_invites
+      - semester_subject
+    TeamCreateRequest:
+      type: object
+      description: Admin creates a team for any eligible students.
+      properties:
+        semester_subject_id:
+          type: integer
+        lead_id:
+          type: integer
+        member_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 20
+      required:
+      - lead_id
+      - semester_subject_id
+    TeamNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - name
     UserBrief:
       type: object
       properties:
