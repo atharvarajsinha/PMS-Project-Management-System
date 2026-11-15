@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import RequiredMark from "@/components/common/RequiredMark";
+import { optionsOf } from "@/config/choices";
 import { idStr } from "@/lib/ids";
 import { cn } from "@/lib/utils";
 
@@ -156,7 +157,5 @@ export function FilterSelect({ value, onChange, options, allLabel, label, classN
   );
 }
 
-export const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-];
+// Account status filter options, from the central choices (config/choices.js)
+export const STATUS_OPTIONS = optionsOf("AccountStatus");

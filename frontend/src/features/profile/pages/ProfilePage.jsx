@@ -16,8 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import { applyApiErrors } from "@/lib/forms";
 import { formatDateTime } from "@/lib/utils";
 import { phone } from "@/lib/schemas";
-
-const ROLE_LABEL = { SUPER_ADMIN: "Super Admin", ADMIN: "Admin", FACULTY: "Faculty", STUDENT: "Student" };
+import { labelOf } from "@/config/choices";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name is required"),
@@ -105,7 +104,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <dl className="grid gap-4 border-t pt-6 sm:grid-cols-2">
-                <ReadOnly label="Role" value={ROLE_LABEL[user.role]} />
+                <ReadOnly label="Role" value={labelOf("Role", user.role)} />
                 {user.college && <ReadOnly label="College" value={user.college.name} />}
                 {user.student && <ReadOnly label="Roll number" value={user.student.roll_number} mono />}
                 {user.student && (
