@@ -72,4 +72,66 @@ class Command(BaseCommand):
                     u.save(update_fields=["status"])
                 Student.objects.create(user=u, college=college, roll_number=roll, section=section)
 
+        self.seed_projects(college, sem, o_daa, o_dsa, x, y)
         self.stdout.write(self.style.SUCCESS("Demo data ready: admin@demo.pms, xavier@demo.pms, yamini@demo.pms (+ students)."))
+
+    def seed_projects(self, college, sem, o_daa, o_dsa, x, y):
+        """Phase 2 demo: phases (closed / open / upcoming), mentor list, two teams, a submission, an invite."""
+        from datetime import timedelta
+        from decimal import Decimal
+
+        from apps.evaluations.services import sync_phase
+        from apps.projects.models import Phase, PhaseSubmission, SubmissionLink
+        from apps.teams import services as team_services
+        from apps.teams.models import MentorAssignment, SemesterMentor, Team, TeamInvite
+
+        settings_row = college.settings
+        settings_row.team_formation_enabled = True
+        settings_row.save(update_fields=["team_formation_enabled", "updated_at"])
+
+        today = timezone.localdate()
+        plan = [
+            (o_daa, "Proposal", -20, -8, "10", "Problem statement and scope."),
+            (o_daa, "Design", -3, 7, "20", "Architecture and data model."),
+            (o_daa, "Final Demo", 10, 24, "30", "Working demo and report."),
+            (o_dsa, "Mini Project", -2, 9, "25", "Implement and benchmark a data structure."),
+        ]
+        for offering, name, start, end, marks, short in plan:
+            order = Phase.objects.filter(semester_subject=offering).count() + 1
+            phase, created = Phase.objects.get_or_create(
+                semester_subject=offering,
+                name=name,
+                defaults={
+                    "start_date": today + timedelta(days=start),
+                    "end_date": today + timedelta(days=end),
+                    "max_marks": Decimal(marks),
+                    "short_description": short,
+                    "order": order,
+                },
+            )
+            if created:
+                phase.status = phase.effective_status()
+                phase.save(update_fields=["status"])
+                sync_phase(phase)
+
+        for faculty in (x, y):
+            SemesterMentor.objects.get_or_create(semester=sem, faculty=faculty, defaults={"capacity": 2})
+
+        students = {s.user.email.split("@")[0]: s for s in Student.objects.filter(college=college).select_related("user")}
+        asha, ananya, bina, bhavesh = (students.get(k) for k in ("asha", "ananya", "bina", "bhavesh"))
+        if not all((asha, ananya, bina, bhavesh)):
+            return
+        admin = User.objects.get(college=college, role=User.Role.ADMIN)
+
+        if not Team.objects.filter(semester_subject=o_daa, lead=asha).exists():
+            team = team_services.create_team(o_daa, asha, admin, members=[bina], admin=True)
+            MentorAssignment.objects.create(team=team, faculty=x, requested_by=asha.user)
+            proposal = Phase.objects.get(semester_subject=o_daa, name="Proposal")
+            sub = PhaseSubmission.objects.create(
+                team=team, phase=proposal, status=PhaseSubmission.Status.SUBMITTED, submitted_by=asha,
+                submitted_at=timezone.now() - timedelta(days=9), notes="Scope agreed with mentor.",
+            )
+            SubmissionLink.objects.create(submission=sub, link_type=SubmissionLink.Type.DOCUMENTATION, url="https://example.com/daa-proposal", title="Proposal doc")
+            TeamInvite.objects.create(team=team, student=bhavesh, invited_by=asha.user)
+        if not Team.objects.filter(semester_subject=o_dsa, lead=ananya).exists():
+            team_services.create_team(o_dsa, ananya, admin, members=[asha], admin=True)
