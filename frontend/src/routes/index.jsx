@@ -38,6 +38,14 @@ const ClassSection = lazy(pages.classSection);
 const Teaching = lazy(pages.teaching);
 const TeachingDetail = lazy(pages.teachingDetail);
 const Profile = lazy(pages.profile);
+const Phases = lazy(pages.phases);
+const Mentors = lazy(pages.mentors);
+const Teams = lazy(pages.teams);
+const Evaluations = lazy(pages.evaluations);
+const Mentoring = lazy(pages.mentoring);
+const MyEvaluations = lazy(pages.myEvaluations);
+const ClassSectionTeams = lazy(pages.classSectionTeams);
+const MyProjects = lazy(pages.myProjects);
 
 const page = (Component) => (
   <Suspense fallback={<PageSkeleton />}>
@@ -97,6 +105,10 @@ export const router = createBrowserRouter([
           { path: "subjects", element: page(Subjects) },
           { path: "sections", element: page(Sections) },
           { path: "mapping", element: page(Mapping) },
+          { path: "phases", element: page(Phases) },
+          { path: "mentors", element: page(Mentors) },
+          { path: "teams", element: page(Teams) },
+          { path: "evaluations", element: page(Evaluations) },
           { path: "import", element: page(Imports) },
           { path: "settings", element: page(Settings) },
         ],
@@ -110,9 +122,19 @@ export const router = createBrowserRouter([
           { path: "classes/:sectionId", element: page(ClassSection) },
           { path: "teaching", element: page(Teaching) },
           { path: "teaching/:id", element: page(TeachingDetail) },
+          { path: "classes/:sectionId/teams", element: page(ClassSectionTeams) },
+          { path: "mentoring", element: page(Mentoring) },
+          { path: "evaluations", element: page(MyEvaluations) },
         ],
       },
-      { path: "/student", element: role(["STUDENT"], page(StudentDashboard)) },
+      {
+        path: "/student",
+        element: role(["STUDENT"], <Outlet />),
+        children: [
+          { index: true, element: page(StudentDashboard) },
+          { path: "projects", element: page(MyProjects) },
+        ],
+      },
       { path: "/profile", element: page(Profile) },
       { path: "*", element: <NotFoundPage /> },
     ],

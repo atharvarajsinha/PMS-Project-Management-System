@@ -1,7 +1,10 @@
 import {
   BookOpen,
   Building2,
+  CalendarClock,
   CalendarRange,
+  ClipboardCheck,
+  FolderKanban,
   GraduationCap,
   LayoutDashboard,
   LayoutGrid,
@@ -9,9 +12,12 @@ import {
   Settings,
   ShieldCheck,
   Upload,
+  UserCheck,
   UserRound,
   Users,
+  UsersRound,
 } from "lucide-react";
+import { Role } from "@/config/choices";
 
 // Each item may carry `load`, the page's dynamic import, so nav links can prefetch on hover.
 const pages = {
@@ -34,6 +40,15 @@ const pages = {
   teaching: () => import("@/features/faculty-portal/pages/TeachingPage"),
   teachingDetail: () => import("@/features/faculty-portal/pages/TeachingDetailPage"),
   profile: () => import("@/features/profile/pages/ProfilePage"),
+  // Phase 2: projects & teams
+  phases: () => import("@/features/phases/pages/PhasesPage"),
+  mentors: () => import("@/features/mentors/pages/MentorsPage"),
+  teams: () => import("@/features/teams/pages/TeamsPage"),
+  evaluations: () => import("@/features/evaluations/pages/EvaluationsPage"),
+  mentoring: () => import("@/features/mentoring/pages/MentoringPage"),
+  myEvaluations: () => import("@/features/evaluations/pages/MyEvaluationsPage"),
+  classSectionTeams: () => import("@/features/mentoring/pages/ClassSectionTeamsPage"),
+  myProjects: () => import("@/features/projects/pages/MyProjectsPage"),
 };
 
 export { pages };
@@ -44,6 +59,8 @@ export const facultyNav = [
   { label: "Dashboard", to: "/faculty", icon: LayoutDashboard, load: pages.facultyDashboard, end: true },
   { label: "My Classes", short: "Classes", to: "/faculty/classes", icon: LayoutGrid, load: pages.myClasses },
   { label: "Teaching", to: "/faculty/teaching", icon: BookOpen, load: pages.teaching },
+  { label: "Mentoring", to: "/faculty/mentoring", icon: UserCheck, load: pages.mentoring },
+  { label: "Evaluations", to: "/faculty/evaluations", icon: ClipboardCheck, load: pages.myEvaluations },
 ];
 
 export const collegeAdminNav = [
@@ -54,6 +71,10 @@ export const collegeAdminNav = [
   { label: "Subjects", to: "/admin/subjects", icon: BookOpen, load: pages.subjects },
   { label: "Sections & Class Teachers", short: "Sections", to: "/admin/sections", icon: LayoutGrid, load: pages.sections },
   { label: "Subject Mapping", short: "Mapping", to: "/admin/mapping", icon: Network, load: pages.mapping },
+  { label: "Phases", to: "/admin/phases", icon: CalendarClock, load: pages.phases },
+  { label: "Mentors", to: "/admin/mentors", icon: UserCheck, load: pages.mentors },
+  { label: "Teams", to: "/admin/teams", icon: UsersRound, load: pages.teams },
+  { label: "Evaluations", to: "/admin/evaluations", icon: ClipboardCheck, load: pages.evaluations },
   { label: "Import Data", short: "Import", to: "/admin/import", icon: Upload, load: pages.imports },
   { label: "Settings", to: "/admin/settings", icon: Settings, load: pages.settings },
 ];
@@ -70,18 +91,26 @@ export const superAdminNav = [
  */
 export function getNav(role, managedCollege) {
   switch (role) {
-    case "SUPER_ADMIN": {
+    case Role.SUPER_ADMIN: {
       const groups = [{ items: superAdminNav }];
       if (managedCollege) groups.push({ label: `Managing: ${managedCollege.name}`, items: collegeAdminNav });
       groups.push({ items: [profile] });
       return groups;
     }
-    case "ADMIN":
+    case Role.ADMIN:
       return [{ items: [...collegeAdminNav, profile] }];
-    case "FACULTY":
+    case Role.FACULTY:
       return [{ items: [...facultyNav, profile] }];
-    case "STUDENT":
-      return [{ items: [{ label: "Dashboard", to: "/student", icon: LayoutDashboard, load: pages.studentDashboard, end: true }, profile] }];
+    case Role.STUDENT:
+      return [
+        {
+          items: [
+            { label: "Dashboard", to: "/student", icon: LayoutDashboard, load: pages.studentDashboard, end: true },
+            { label: "My Projects", short: "Projects", to: "/student/projects", icon: FolderKanban, load: pages.myProjects },
+            profile,
+          ],
+        },
+      ];
     default:
       return [];
   }
