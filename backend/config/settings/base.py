@@ -1,3 +1,4 @@
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
@@ -36,6 +38,9 @@ INSTALLED_APPS = [
     "apps.academics",
     "apps.dashboards",
     "apps.imports",
+    "apps.projects",
+    "apps.teams",
+    "apps.evaluations",
 ]
 
 MIDDLEWARE = [
@@ -76,7 +81,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+# Calendar days (phase start/end dates) are judged in this zone; timestamps are stored in UTC.
+TIME_ZONE = env("TIME_ZONE", default="Asia/Kolkata")
 USE_I18N = False
 USE_TZ = True
 
@@ -168,6 +174,9 @@ EMAIL_BATCH_SIZE = 50
 # Activation emails are sent right after the request; stop after this many seconds
 # (large bulk activations) and leave the rest to the jobs endpoint.
 EMAIL_SEND_TIME_BUDGET_SECONDS = env.int("EMAIL_SEND_TIME_BUDGET_SECONDS", default=20)
+# Send emails on a background thread after commit (requests never wait for SMTP).
+# Off under `manage.py test` so tests can assert on sent mail synchronously.
+EMAIL_ASYNC = env.bool("EMAIL_ASYNC", default=sys.argv[1:2] != ["test"])
 
 LOGGING = {
     "version": 1,

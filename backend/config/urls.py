@@ -10,6 +10,9 @@ api_v1 = [
     path("", include("apps.academics.urls")),
     path("", include("apps.dashboards.urls")),
     path("", include("apps.imports.urls")),
+    path("", include("apps.projects.urls")),
+    path("", include("apps.teams.urls")),
+    path("", include("apps.evaluations.urls")),
 ]
 
 urlpatterns = [
