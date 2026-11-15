@@ -3,7 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const PasswordInput = forwardRef(({ className, ...props }, ref) => {
+const PasswordInput = forwardRef(({ className, revealLabel = "password", ...props }, ref) => {
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative">
@@ -12,7 +12,7 @@ const PasswordInput = forwardRef(({ className, ...props }, ref) => {
         type="button"
         onClick={() => setVisible((v) => !v)}
         className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? `Hide ${revealLabel}` : `Show ${revealLabel}`}
       >
         {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>
