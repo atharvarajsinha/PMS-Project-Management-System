@@ -420,8 +420,69 @@ class MappingImporter(Importer):
         return "created", f"{label} mapped{taught}{f' ({subject.code} offered in {semester})' if offered else ''}."
 
 
+# ---------------------------------------------------------------- projects (Phase 2)
+
+
+class MentorImporter(Importer):
+    kind = "mentors"
+    label = "Mentors"
+    description = (
+        "Adds faculty to semester mentor lists (one row per semester + faculty). "
+        "A row for someone already listed updates their capacity."
+    )
+    columns = (
+        Column("semester", True, "Semester number, e.g. 7"),
+        Column("faculty_email", True, "Email of an existing faculty member"),
+        Column("capacity", False, "Teams they may mentor that semester; empty = the default in Settings"),
+    )
+    examples = (
+        {"semester": "7", "faculty_email": "ravi.kumar@college.edu", "capacity": "4"},
+        {"semester": "7", "faculty_email": "meera.nair@college.edu", "capacity": ""},
+        {"semester": "5", "faculty_email": "ravi.kumar@college.edu", "capacity": "2"},
+    )
+
+    def capacity(self, row):
+        value = row.get("capacity", "")
+        if not value:
+            return None
+        if not value.isdigit() or not 1 <= int(value) <= 100:
+            raise RowError({"capacity": "Enter a whole number from 1 to 100."})
+        return int(value)
+
+    def import_row(self, row):
+        from apps.teams.models import SemesterMentor
+        from apps.teams.services import mentors_with_load, reject_pending_if_full
+
+        semester = self.semester(row)
+        faculty = self.faculty(row, "faculty_email")
+        if faculty is None:
+            raise RowError({"faculty_email": "This field is required."})
+        capacity = self.capacity(row)
+        who = f"{faculty.user.name} in {semester}"
+
+        slot = mentors_with_load(semester.pk).filter(faculty=faculty).first()
+        if slot is not None:
+            if capacity is None or capacity == slot.capacity:
+                return "skipped", f"{who} is already a mentor; nothing to change."
+            if capacity < slot.load:
+                raise RowError({"capacity": f"{faculty.user.name} already mentors {slot.load} teams in {semester}."})
+            old = {"capacity": slot.capacity}
+            SemesterMentor.objects.filter(pk=slot.pk).update(capacity=capacity, updated_at=timezone.now())
+            slot.refresh_from_db()
+            audit.record(self.request, "semester_mentor.update", slot, old=old, new={"capacity": capacity})
+            reject_pending_if_full(slot)
+            return "updated", f"{who}: capacity {old['capacity']} → {capacity}."
+
+        capacity = capacity or self.college.settings.default_mentor_capacity
+        slot = SemesterMentor.objects.create(semester=semester, faculty=faculty, capacity=capacity, added_by=self.request.user)
+        audit.record(self.request, "semester_mentor.create", slot, new={"semester": semester.pk, "faculty": faculty.pk, "capacity": capacity})
+        return "created", f"{who} can mentor up to {capacity} teams."
+
+
 # In dependency order: each import only needs the ones before it.
 IMPORTERS = {
     cls.kind: cls
-    for cls in (FacultyImporter, SemesterImporter, SubjectImporter, SectionImporter, StudentImporter, MappingImporter)
+    for cls in (
+        FacultyImporter, SemesterImporter, SubjectImporter, SectionImporter, StudentImporter, MappingImporter, MentorImporter,
+    )
 }

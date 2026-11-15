@@ -23,7 +23,7 @@ class ImportTests(PMSTestCase):
     def test_kinds_and_templates(self):
         r = self.client.get("/api/v1/imports/")
         kinds = [k["kind"] for k in r.json()["results"]]
-        self.assertEqual(kinds, ["faculty", "semesters", "subjects", "sections", "students", "subject-mappings"])
+        self.assertEqual(kinds, ["faculty", "semesters", "subjects", "sections", "students", "subject-mappings", "mentors"])
         r = self.client.get("/api/v1/imports/students/template/")
         self.assertEqual(r.status_code, 200)
         self.assertTrue(r.content.decode().startswith("name,email,roll_number,semester,section,phone"))
@@ -161,3 +161,39 @@ class BulkDeleteTests(PMSTestCase):
         r = client.post(f"/api/v1/my/class-sections/{section.id}/students/bulk-delete/", {"ids": [student.id]}, format="json")
         self.assertEqual(r.status_code, 405)
         self.assertTrue(Student.objects.filter(pk=student.pk).exists())
+
+class MentorImportTests(PMSTestCase):
+    def setUp(self):
+        super().setUp()
+        self.college = self.make_college()
+        self.client = self.client_for(self.make_admin(self.college))
+
+    def upload(self, kind, text, dry_run=False):
+        url = f"/api/v1/imports/{kind}/" + ("?dry_run=true" if dry_run else "")
+        return self.client.post(url, {"file": csv_file(text)}, format="multipart")
+
+    def test_mentors_import_creates_updates_and_reports(self):
+        from apps.teams.models import SemesterMentor
+
+        sem7 = Semester.objects.create(college=self.college, semester_number=7)
+        Semester.objects.create(college=self.college, semester_number=5)
+        ravi = self.make_faculty(self.college, email="ravi@x.edu")
+        self.make_faculty(self.college, email="meera@x.edu")
+        SemesterMentor.objects.create(semester=sem7, faculty=ravi, capacity=2)
+        text = (
+            "semester,faculty_email,capacity\n"
+            "7,ravi@x.edu,4\n"  # update capacity
+            "7,meera@x.edu,\n"  # default capacity
+            "5,ravi@x.edu,1\n"  # another semester
+            "9,ravi@x.edu,1\n"  # no such semester
+            "7,nobody@x.edu,1\n"  # no such faculty
+            "7,meera@x.edu,0\n"  # bad capacity
+        )
+        preview = self.upload("mentors", text, dry_run=True).json()
+        self.assertEqual(SemesterMentor.objects.count(), 1)  # dry run saves nothing
+        rows = self.upload("mentors", text).json()["rows"]
+        self.assertEqual([r["status"] for r in rows], [r["status"] for r in preview["rows"]])
+        self.assertEqual([r["status"] for r in rows], ["updated", "created", "created", "error", "error", "error"])
+        caps = {(m.semester.semester_number, m.faculty.user.email): m.capacity for m in SemesterMentor.objects.select_related("semester", "faculty__user")}
+        default = self.college.settings.default_mentor_capacity
+        self.assertEqual(caps, {(7, "ravi@x.edu"): 4, (7, "meera@x.edu"): default, (5, "ravi@x.edu"): 1})
