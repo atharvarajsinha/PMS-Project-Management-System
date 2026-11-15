@@ -31,7 +31,11 @@ export default function MemberOverview() {
       </dl>
       <p className="mt-4 text-xs text-muted-foreground">
         {s.teams_locked && <Lock className="mr-1 inline size-3" aria-hidden />}
-        Teams, phases and submissions will appear here once your college opens them.
+        {s.teams_locked
+          ? "Teams are locked. Only your Admin can change them now."
+          : s.team_formation_enabled
+            ? "Students can create and join teams now."
+            : "Students can form teams once your Admin opens team formation."}
       </p>
     </section>
   );
