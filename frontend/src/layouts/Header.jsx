@@ -14,12 +14,12 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import CollegeSwitcher from "@/components/common/CollegeSwitcher";
 import Logo from "@/components/common/Logo";
+import RefreshButton from "@/components/common/RefreshButton";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import NavGroups from "@/layouts/NavGroups";
 import { HOME_BY_ROLE, useAuth } from "@/context/AuthContext";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-
-const ROLE_LABEL = { SUPER_ADMIN: "Super Admin", ADMIN: "Admin", FACULTY: "Faculty", STUDENT: "Student" };
+import { labelOf } from "@/config/choices";
 
 function initials(name = "") {
   return name
@@ -61,6 +61,7 @@ export default function Header({ groups }) {
 
         <div className="ml-auto flex min-w-0 items-center gap-1">
           {user?.role === "SUPER_ADMIN" && <CollegeSwitcher />}
+          <RefreshButton />
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -77,7 +78,7 @@ export default function Header({ groups }) {
                 <p className="truncate text-sm font-medium">{user?.name}</p>
                 <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {ROLE_LABEL[user?.role]}
+                  {labelOf("Role", user?.role)}
                   {user?.college ? ` · ${user.college.name}` : ""}
                 </p>
               </DropdownMenuLabel>
