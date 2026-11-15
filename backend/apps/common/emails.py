@@ -5,27 +5,32 @@
   bulk activation running out of time) stays PENDING and is retried by the UptimeRobot
   job (`/api/v1/jobs/run/`). The temporary password is generated at send time, so it is
   never stored in plain text.
-- Time-sensitive mail (password-reset OTP) is sent immediately with `send_now`.
+- Time-sensitive mail (password-reset OTP) is sent with `send_later` (right after commit).
+- Sending never blocks the request: with EMAIL_ASYNC (default, except under tests) every
+  send runs on a small background thread pool after the transaction commits.
 - Every email is rendered from `templates/emails/<name>{_subject.txt,.txt,.html}` and sent
   as text + HTML (`render_email`).
 """
 
 import logging
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
-from django.db import transaction
+from django.db import close_old_connections, connections, transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from .choices import Role
 from .models import EmailOutbox
 from .passwords import generate_temp_password
 
 logger = logging.getLogger(__name__)
 
 
-ROLE_LABELS = {"SUPER_ADMIN": "Super Admin", "ADMIN": "Admin", "FACULTY": "Faculty", "STUDENT": "Student"}
+ROLE_LABELS = dict(Role.choices)
 
 
 def render_email(template, user, **context):
@@ -62,6 +67,39 @@ def send_now(to_email, subject, text, html=None):
         return False
 
 
+_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="pms-email")
+
+
+def run_in_background(fn, *args, **kwargs):
+    """Run `fn` off the request thread (synchronously when EMAIL_ASYNC is off, e.g. in tests)."""
+    if not settings.EMAIL_ASYNC:
+        return fn(*args, **kwargs)
+
+    def task():
+        on_worker = threading.current_thread().name.startswith("pms-email")
+        if on_worker:
+            close_old_connections()
+        try:
+            fn(*args, **kwargs)
+        except Exception:
+            logger.exception("Background email task failed")
+        finally:
+            if on_worker:
+                connections.close_all()  # this worker thread's own DB connections
+
+    _executor.submit(task)
+    return None
+
+
+def send_later(to_email, subject, text, html=None):
+    """Send one email after the current transaction commits, in the background.
+    Without EMAIL_ASYNC it is sent right away, as before."""
+    if not settings.EMAIL_ASYNC:
+        send_now(to_email, subject, text, html)
+        return
+    transaction.on_commit(lambda: run_in_background(send_now, to_email, subject, text, html))
+
+
 def queue_credentials_email(user):
     """Record an activation/credentials email. Replaces any unsent one for the same user."""
     EmailOutbox.objects.filter(
@@ -80,7 +118,9 @@ def send_after_commit(item_ids):
     item_ids = list(item_ids)
     if item_ids:
         transaction.on_commit(
-            lambda: process_outbox(ids=item_ids, time_budget=settings.EMAIL_SEND_TIME_BUDGET_SECONDS)
+            lambda: run_in_background(
+                process_outbox, ids=item_ids, time_budget=settings.EMAIL_SEND_TIME_BUDGET_SECONDS
+            )
         )
 
 

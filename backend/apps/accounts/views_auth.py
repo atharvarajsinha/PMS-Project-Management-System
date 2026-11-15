@@ -24,7 +24,7 @@ from apps.common.authentication import (
     issue_session,
     set_auth_cookies,
 )
-from apps.common.emails import render_email, send_now
+from apps.common.emails import render_email, send_later
 from apps.common.exceptions import (
     InvalidCredentials,
     InvalidInput,
@@ -186,7 +186,7 @@ class PasswordResetRequestView(PublicAuthView):
         subject, text, html = render_email(
             "password_reset_otp", user, otp=otp, minutes=settings.OTP_TTL_SECONDS // 60
         )
-        send_now(user.email, subject, text, html)
+        send_later(user.email, subject, text, html)
         audit.record(request, "auth.password_reset_request", user, actor=user)
 
 
