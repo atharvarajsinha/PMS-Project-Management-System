@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.db.models import Q
 
+from apps.common import choices
 from apps.common.models import BaseModel
 
 
@@ -22,15 +23,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, BaseModel):
-    class Role(models.TextChoices):
-        SUPER_ADMIN = "SUPER_ADMIN"
-        ADMIN = "ADMIN"
-        FACULTY = "FACULTY"
-        STUDENT = "STUDENT"
-
-    class Status(models.TextChoices):
-        ACTIVE = "ACTIVE"
-        INACTIVE = "INACTIVE"
+    Role = choices.Role
+    Status = choices.AccountStatus
 
     last_login = None  # replaced by last_login_at
 
@@ -116,8 +110,7 @@ class Student(BaseModel):
 
 
 class PasswordResetOTP(models.Model):
-    class Purpose(models.TextChoices):
-        PASSWORD_RESET = "PASSWORD_RESET"
+    Purpose = choices.OtpPurpose
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_otps")
     purpose = models.CharField(max_length=20, choices=Purpose.choices, default=Purpose.PASSWORD_RESET)

@@ -2,13 +2,12 @@ from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 
+from apps.common import choices
 from apps.common.models import BaseModel
 
 
 class College(BaseModel):
-    class Status(models.TextChoices):
-        ACTIVE = "ACTIVE"
-        INACTIVE = "INACTIVE"
+    Status = choices.CollegeStatus
 
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, unique=True)

@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from . import choices
+
 
 class BaseModel(models.Model):
     """Auto-increment bigint primary key (DEFAULT_AUTO_FIELD) + created/updated timestamps."""
@@ -43,14 +45,8 @@ class AuditLog(models.Model):
 
 
 class EmailOutbox(models.Model):
-    class Kind(models.TextChoices):
-        ACCOUNT_ACTIVATION = "ACCOUNT_ACTIVATION"
-        GENERIC = "GENERIC"
-
-    class Status(models.TextChoices):
-        PENDING = "PENDING"
-        SENT = "SENT"
-        FAILED = "FAILED"
+    Kind = choices.EmailKind
+    Status = choices.EmailStatus
 
     college = models.ForeignKey(
         "colleges.College", null=True, blank=True, on_delete=models.CASCADE, related_name="+"

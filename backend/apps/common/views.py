@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import choices
 from .emails import process_outbox
 
 
@@ -31,7 +32,17 @@ class JobsRunView(APIView):
         token = request.query_params.get("token", "")
         if not settings.JOBS_SECRET or not hmac.compare_digest(token, settings.JOBS_SECRET):
             return JsonResponse({"error": {"code": "NOT_FOUND", "message": "Not found."}}, status=404)
-        return Response(process_outbox())
+        from apps.projects.services import sync_statuses
+
+        return Response({**process_outbox(), **sync_statuses()})
+
+
+class ChoicesView(APIView):
+    """GET /meta/choices/ — every status/type list (same data as frontend/src/config/choices.generated.js)."""
+
+    @extend_schema(responses={200: dict}, tags=["system"])
+    def get(self, request):
+        return Response(choices.as_dict())
 
 
 def not_found(request, exception=None):

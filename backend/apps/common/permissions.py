@@ -1,12 +1,13 @@
 from django.conf import settings
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+from .choices import Role
 from .exceptions import PasswordChangeRequired
 
-SUPER_ADMIN = "SUPER_ADMIN"
-ADMIN = "ADMIN"
-FACULTY = "FACULTY"
-STUDENT = "STUDENT"
+SUPER_ADMIN = Role.SUPER_ADMIN
+ADMIN = Role.ADMIN
+FACULTY = Role.FACULTY
+STUDENT = Role.STUDENT
 
 
 class IsActiveUser(BasePermission):
@@ -44,6 +45,10 @@ class IsCollegeAdmin(HasRole):
 
 class IsFaculty(HasRole):
     roles = (FACULTY,)
+
+
+class IsStudent(HasRole):
+    roles = (STUDENT,)
 
 
 class ReadAnyWriteCollegeAdmin(IsActiveUser):
