@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Mail, Pencil, Plus, Power, Users } from "lucide-react";
+import { BookOpen, Mail, Pencil, Plus, Power, Users, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -163,9 +163,16 @@ export default function ClassSectionPage() {
         title={s ? sectionLabel(s.semester.semester_number, s.name) : "Class section"}
         description="You're the class teacher. Add your students, keep their details up to date and activate their accounts."
         actions={
-          <Button onClick={openAdd} disabled={!s}>
-            <Plus className="size-4" /> Add student
-          </Button>
+          <>
+            <Button variant="outline" asChild>
+              <Link to={`/faculty/classes/${sectionId}/teams`}>
+                <UsersRound className="size-4" /> Students&apos; teams
+              </Link>
+            </Button>
+            <Button onClick={openAdd} disabled={!s}>
+              <Plus className="size-4" /> Add student
+            </Button>
+          </>
         }
       />
 
