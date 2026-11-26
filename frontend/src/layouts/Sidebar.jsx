@@ -32,7 +32,7 @@ export default function Sidebar({ groups }) {
   return (
     <aside
       className={cn(
-        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col border-r bg-background/40 transition-[width] lg:flex",
+        "sticky top-14 hidden h-[calc(100dvh-3.5rem)] shrink-0 flex-col border-r border-border/70 bg-card/55 backdrop-blur-xl transition-[width] lg:flex",
         collapsed ? "w-[72px]" : "w-64",
       )}
     >
@@ -41,7 +41,7 @@ export default function Sidebar({ groups }) {
           <NavGroups groups={groups} collapsed={collapsed} />
         </nav>
       </ScrollArea>
-      <div className={cn("border-t p-3", collapsed && "flex justify-center")}>
+      <div className={cn("border-t border-border/70 p-3", collapsed && "flex justify-center")}>
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "sm"}

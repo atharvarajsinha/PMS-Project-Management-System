@@ -42,7 +42,7 @@ export default function Header({ groups }) {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/75 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center gap-2 px-4 md:px-6">
         {/* Drawer trigger: md to lg only (bottom nav covers < md, sidebar covers lg+) */}
         <Button

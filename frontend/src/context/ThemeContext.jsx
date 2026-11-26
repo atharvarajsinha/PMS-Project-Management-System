@@ -21,7 +21,7 @@ export function ThemeProvider({ children }) {
       const isDark = theme === "dark" || (theme === "system" && media.matches);
       root.classList.toggle("dark", isDark);
       root.style.colorScheme = isDark ? "dark" : "light";
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#0B0907" : "#FFFFFF");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#F2FAFF");
     };
     apply();
     if (theme === "system") {

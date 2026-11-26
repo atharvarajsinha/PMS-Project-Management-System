@@ -93,10 +93,10 @@ export default function SubmissionDialog({ teamId, phase, onOpenChange }) {
           <Button variant="outline" size="sm" onClick={() => setLinks((ls) => [...ls, blank()])} disabled={links.length >= 20}>
             <Plus className="size-4" /> Add link
           </Button>
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="sub-notes">Notes for the evaluator</Label>
             <Textarea id="sub-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </div>
+          </div> */}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
               Cancel

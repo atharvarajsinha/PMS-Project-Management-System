@@ -2,16 +2,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StatTile({ label, value, icon: Icon, loading }) {
   return (
-    <div className="relative overflow-hidden rounded-lg border bg-card p-4 md:p-6">
-      <span className="absolute inset-x-0 top-0 h-0.5 bg-brand-gradient" aria-hidden />
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        {Icon && <Icon className="size-4 text-muted-foreground" aria-hidden />}
+    <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-soft transition-colors hover:border-primary/30">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        {Icon && (
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary" aria-hidden>
+            <Icon className="size-5" strokeWidth={1.75} />
+          </span>
+        )}
       </div>
       {loading ? (
-        <Skeleton className="mt-2 h-8 w-16" />
+        <Skeleton className="mt-3 h-9 w-16" />
       ) : (
-        <p className="mt-1 text-2xl font-semibold tabular-nums">{value ?? "—"}</p>
+        <p className="mt-3 text-3xl font-semibold tracking-tight tabular-nums">{value ?? "—"}</p>
       )}
     </div>
   );

@@ -13,10 +13,10 @@ export default function NavItem({ item, collapsed = false, onNavigate }) {
       aria-label={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         cn(
-          "relative flex h-10 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground",
+          "relative flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-all duration-200 hover:bg-accent/70 hover:text-foreground",
           collapsed && "justify-center px-0",
           isActive &&
-            "bg-accent font-medium text-accent-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-gradient hover:bg-accent hover:text-accent-foreground",
+            "bg-accent font-semibold text-accent-foreground shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.10)] hover:bg-accent hover:text-accent-foreground",
         )
       }
     >

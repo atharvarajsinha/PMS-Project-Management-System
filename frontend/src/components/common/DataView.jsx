@@ -23,13 +23,13 @@ export default function DataView({ columns, rows, renderCard, loading, error, on
     );
   }
 
-  if (!rows?.length) return <div className="rounded-lg border">{empty}</div>;
+  if (!rows?.length) return <div className="rounded-2xl border border-border/70 bg-card shadow-soft">{empty}</div>;
 
   if (!isDesktop) {
     return (
       <ul className="space-y-3">
         {rows.map((row) => (
-          <li key={rowKey(row)} className="rounded-lg border bg-card p-4">
+          <li key={rowKey(row)} className="rounded-2xl border border-border/70 bg-card p-4 shadow-soft">
             {renderCard(row)}
           </li>
         ))}
@@ -38,7 +38,7 @@ export default function DataView({ columns, rows, renderCard, loading, error, on
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card shadow-soft">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">

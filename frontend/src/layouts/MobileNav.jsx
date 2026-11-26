@@ -25,14 +25,14 @@ export default function MobileNav({ groups }) {
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border/70 bg-card/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
       >
         {primary.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
-            className={({ isActive }) => cn(itemClass, isActive && "font-medium text-primary")}
+            className={({ isActive }) => cn(itemClass, isActive && "font-semibold text-primary")}
           >
             <item.icon className="size-6" strokeWidth={1.75} aria-hidden />
             <span className="max-w-full truncate px-1">{item.short || item.label}</span>

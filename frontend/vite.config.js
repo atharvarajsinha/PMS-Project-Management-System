@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => {
           short_name: "PMS",
           start_url: "/",
           display: "standalone",
-          background_color: "#0B0907",
-          theme_color: "#F97316",
+          background_color: "#000000",
+          theme_color: "#0D7BA8",
           icons: [
             { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
             { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
