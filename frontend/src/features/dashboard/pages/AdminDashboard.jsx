@@ -96,13 +96,11 @@ export default function AdminDashboard() {
                 <div>
                   <dt className="text-xs text-muted-foreground">Team formation</dt>
                   <dd>
-                    <StatusBadge status={settings.data.team_formation_enabled ? "OPEN" : "INACTIVE"} label={settings.data.team_formation_enabled ? "Open" : "Closed"} />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Teams</dt>
-                  <dd>
-                    <StatusBadge status={settings.data.teams_locked ? "LOCKED" : "ACTIVE"} label={settings.data.teams_locked ? "Locked" : "Unlocked"} />
+                    {settings.data.teams_locked ? (
+                      <StatusBadge status="LOCKED" label="Closed · teams locked" />
+                    ) : (
+                      <StatusBadge status={settings.data.team_formation_enabled ? "OPEN" : "INACTIVE"} label={settings.data.team_formation_enabled ? "Open" : "Not open yet"} />
+                    )}
                   </dd>
                 </div>
               </dl>

@@ -177,14 +177,11 @@ class EvaluatorAutoAssignTests(Phase2Fixture):
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(self.evaluators(team_id), [self.z.id])
 
-    def test_override_respects_cross_section_setting(self):
+    def test_admin_overrides_with_any_faculty(self):
         phase = self.make_phase()
         team_id = self.create_team(self.a1, members=[self.a2])  # all in A; only Xavier teaches DAA there
         admin = self.as_user(self.admin)
-        r = admin.post(f"/api/v1/teams/{team_id}/set-evaluator/", {"evaluator_id": self.y.id}, format="json")
-        self.assertError(r, 400, "VALIDATION_ERROR")
-        self.settings.allow_cross_section_evaluation = True
-        self.settings.save()
+        # Yamini doesn't teach DAA in section A: the Admin may still pick her
         r = admin.post(f"/api/v1/teams/{team_id}/set-evaluator/", {"evaluator_id": self.y.id}, format="json")
         self.assertEqual(r.status_code, 200, r.content)
         a = EvaluatorAssignment.objects.get(team_id=team_id, phase=phase)

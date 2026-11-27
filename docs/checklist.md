@@ -48,7 +48,7 @@ Legend: `[x]` done · `[~]` partial / not verified · `[ ]` not started
 - [x] **CSV imports** (pulled forward from Phase 3): faculty, semesters, subjects, sections & class coordinators, students, subject mappings — template download, dry-run preview, partial import of valid rows, error-rows CSV; *Import Data* page + "Import CSV" on each list page
 
 ### 6. College configuration
-- [x] `GET/PATCH /settings/` — min/max team size, default mentor capacity, team formation, global team lock, cross-section evaluation (DB check constraints)
+- [x] `GET/PATCH /settings/` — min/max team size, default mentor capacity, team formation (closing it locks all teams) (DB check constraints)
 - [x] Frontend: Settings page
 
 ### 7. Audit logging

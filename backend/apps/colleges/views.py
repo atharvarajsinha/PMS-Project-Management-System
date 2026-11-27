@@ -32,7 +32,7 @@ from .serializers import (
 COLLEGE_AUDIT_FIELDS = ["name", "code", "status", "contact_email", "contact_phone", "address"]
 SETTINGS_AUDIT_FIELDS = [
     "min_team_size", "max_team_size", "default_mentor_capacity", "team_formation_enabled",
-    "teams_locked", "allow_cross_section_evaluation",
+    "teams_locked",
 ]
 ADMIN_AUDIT_FIELDS = ["name", "email", "phone", "status"]
 
@@ -230,12 +230,14 @@ class CollegeSettingsView(APIView):
         serializer = CollegeSettingsSerializer(settings_obj, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        locked = serializer.validated_data.get("teams_locked")
+        # One switch: opening team formation unlocks the teams; closing it locks them all
+        # (no joins, leaves or changes, and evaluators stop following Team Lead changes).
         extra = {"updated_by": request.user}
-        if locked is True and not settings_obj.teams_locked:
-            extra["teams_locked_at"] = timezone.now()
-        elif locked is False:
-            extra["teams_locked_at"] = None
+        open_ = serializer.validated_data.get("team_formation_enabled")
+        if open_ is True:
+            extra.update(teams_locked=False, teams_locked_at=None)
+        elif open_ is False and settings_obj.team_formation_enabled:
+            extra.update(teams_locked=True, teams_locked_at=timezone.now())
         serializer.save(**extra)
 
         audit.record(request, "settings.update", settings_obj, old=old, new=audit.snapshot(settings_obj, SETTINGS_AUDIT_FIELDS))

@@ -101,9 +101,10 @@ class CollegeSettingsSerializer(serializers.ModelSerializer):
         model = CollegeSettings
         fields = [
             "min_team_size", "max_team_size", "default_mentor_capacity", "team_formation_enabled",
-            "teams_locked", "teams_locked_at", "allow_cross_section_evaluation", "updated_by", "updated_at",
+            "teams_locked", "teams_locked_at", "updated_by", "updated_at",
         ]
-        read_only_fields = ["teams_locked_at", "updated_at"]
+        # teams_locked follows team_formation_enabled: closing formation locks the teams
+        read_only_fields = ["teams_locked", "teams_locked_at", "updated_at"]
 
     def validate(self, attrs):
         min_size = attrs.get("min_team_size", self.instance.min_team_size)

@@ -552,7 +552,7 @@ The header has a **college switcher** (`Command` combobox, `ArrowLeftRight` icon
 | Subjects | `/admin/subjects` | `BookOpen` |
 | Sections & Class Coordinators | `/admin/sections` | `LayoutGrid` |
 | Subject Mapping | `/admin/mapping` | `Network` (tabs: Semester subjects · Section subjects · Faculty assignment) |
-| Settings | `/admin/settings` | `Settings` (team size, mentor capacity, team formation, team lock, cross-section evaluation) |
+| Settings | `/admin/settings` | `Settings` (team size, mentor capacity, team formation: one switch, closing it locks teams) |
 | Profile | `/profile` | `UserRound` |
 
 Mobile bottom nav: Dashboard, Faculty, Students, Semesters, and More.

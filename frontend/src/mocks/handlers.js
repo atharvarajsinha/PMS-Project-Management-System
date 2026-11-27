@@ -565,7 +565,6 @@ function serializeSettings(s) {
     team_formation_enabled: s.team_formation_enabled,
     teams_locked: s.teams_locked,
     teams_locked_at: s.teams_locked_at,
-    allow_cross_section_evaluation: s.allow_cross_section_evaluation,
     updated_by: userSummary(userById(s.updated_by_id)),
     updated_at: s.updated_at,
   };
@@ -1173,7 +1172,6 @@ const platformHandlers = [
       team_formation_enabled: false,
       teams_locked: false,
       teams_locked_at: null,
-      allow_cross_section_evaluation: false,
       updated_by_id: null,
       updated_at: ts,
     });
@@ -1295,7 +1293,7 @@ const collegeHandlers = [
   route('get', '/settings/', COLLEGE_ANY, ({ college }) => {
     let s = settingsFor(college.id);
     if (!s) {
-      s = { college_id: college.id, min_team_size: 2, max_team_size: 4, default_mentor_capacity: 5, team_formation_enabled: false, teams_locked: false, teams_locked_at: null, allow_cross_section_evaluation: false, updated_by_id: null, updated_at: nowIso() };
+      s = { college_id: college.id, min_team_size: 2, max_team_size: 4, default_mentor_capacity: 5, team_formation_enabled: false, teams_locked: false, teams_locked_at: null, updated_by_id: null, updated_at: nowIso() };
       getDb().settings.push(s);
     }
     return json(serializeSettings(s));
@@ -1305,13 +1303,11 @@ const collegeHandlers = [
     const s = settingsFor(college.id);
     if (!s) throw notFound('Settings not found.');
     const v = makeValidator();
-    rejectReadOnly(v, body, ['teams_locked_at', 'updated_by', 'updated_at']);
+    rejectReadOnly(v, body, ['teams_locked', 'teams_locked_at', 'updated_by', 'updated_at']);
     const min = cleanInt(v, body, 'min_team_size', { partial: true, min: 2 });
     const max = cleanInt(v, body, 'max_team_size', { partial: true, max: 20 });
     const cap = cleanInt(v, body, 'default_mentor_capacity', { partial: true, min: 1, max: 100 });
     const tfe = cleanBool(v, body, 'team_formation_enabled');
-    const locked = cleanBool(v, body, 'teams_locked');
-    const cross = cleanBool(v, body, 'allow_cross_section_evaluation');
     const effMin = min ?? s.min_team_size;
     const effMax = max ?? s.max_team_size;
     if (!v.has('min_team_size') && !v.has('max_team_size') && effMax < effMin) {
@@ -1322,13 +1318,15 @@ const collegeHandlers = [
     if (min !== undefined) s.min_team_size = min;
     if (max !== undefined) s.max_team_size = max;
     if (cap !== undefined) s.default_mentor_capacity = cap;
-    if (tfe !== undefined) s.team_formation_enabled = tfe;
-    if (cross !== undefined) s.allow_cross_section_evaluation = cross;
-    if (locked !== undefined) {
-      if (locked && !s.teams_locked) s.teams_locked_at = ts;
-      if (!locked) s.teams_locked_at = null;
-      s.teams_locked = locked;
+    // one switch: opening formation unlocks the teams, closing it locks them
+    if (tfe === true) {
+      s.teams_locked = false;
+      s.teams_locked_at = null;
+    } else if (tfe === false && s.team_formation_enabled) {
+      s.teams_locked = true;
+      s.teams_locked_at = ts;
     }
+    if (tfe !== undefined) s.team_formation_enabled = tfe;
     s.updated_by_id = user.id;
     s.updated_at = ts;
     return json(serializeSettings(s));

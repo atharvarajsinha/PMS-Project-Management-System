@@ -33,10 +33,11 @@ class CollegeSettings(BaseModel):
     min_team_size = models.PositiveSmallIntegerField(default=2)
     max_team_size = models.PositiveSmallIntegerField(default=4)
     default_mentor_capacity = models.PositiveSmallIntegerField(default=5)
+    # One switch for the Admin: team formation open. Closing it locks every team (teams_locked is
+    # kept in step by the settings API); "never opened" is formation off and not locked.
     team_formation_enabled = models.BooleanField(default=False)
     teams_locked = models.BooleanField(default=False)
     teams_locked_at = models.DateTimeField(null=True, blank=True)
-    allow_cross_section_evaluation = models.BooleanField(default=False)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )

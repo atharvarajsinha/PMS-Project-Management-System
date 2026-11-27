@@ -118,12 +118,21 @@ class SettingsTests(PMSTestCase):
 
     def test_admin_updates_settings(self):
         client = self.client_for(self.admin)
-        r = client.patch("/api/v1/settings/", {"min_team_size": 3, "max_team_size": 5, "teams_locked": True}, format="json")
+        r = client.patch("/api/v1/settings/", {"min_team_size": 3, "max_team_size": 5, "team_formation_enabled": True}, format="json")
         self.assertEqual(r.status_code, 200, r.content)
         body = r.json()
         self.assertEqual((body["min_team_size"], body["max_team_size"]), (3, 5))
-        self.assertIsNotNone(body["teams_locked_at"])
+        self.assertEqual((body["teams_locked"], body["teams_locked_at"]), (False, None))
         self.assertEqual(body["updated_by"]["id"], self.admin.id)
+        # closing team formation locks every team; teams_locked can't be set on its own
+        r = client.patch("/api/v1/settings/", {"team_formation_enabled": False, "teams_locked": False}, format="json")
+        body = r.json()
+        self.assertTrue(body["teams_locked"])
+        self.assertIsNotNone(body["teams_locked_at"])
+        self.assertNotIn("allow_cross_section_evaluation", body)
+        # reopening unlocks
+        body = client.patch("/api/v1/settings/", {"team_formation_enabled": True}, format="json").json()
+        self.assertEqual((body["teams_locked"], body["teams_locked_at"]), (False, None))
 
         r = client.patch("/api/v1/settings/", {"max_team_size": 2}, format="json")
         self.assertError(r, 400, "VALIDATION_ERROR")

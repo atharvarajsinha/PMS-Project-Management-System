@@ -50,8 +50,7 @@ The platform owner. There is exactly one, created automatically from server sett
 1. **Automatic account.** Created (or re-activated) from the `SUPER_ADMIN_EMAIL / PASSWORD / NAME` settings every
    time the server starts; can also be run by hand with `ensure_superadmin`.
 2. **Create a college.** Information: **name**, **code** (unique, e.g. `GEHU-BTL`), contact email, contact phone,
-   address. Its settings are created with defaults (team size 2–4, mentor capacity 5, formation off, no lock,
-   no cross-section evaluation).
+   address. Its settings are created with defaults (team size 2–4, mentor capacity 5, formation off, no lock).
 3. **Manage colleges.** List, search and view every college with its admin and headline counts (faculty,
    students, semesters); edit details.
 4. **Activate / deactivate a college.** A deactivated college's users (admin, faculty, students) can't sign in;
@@ -132,10 +131,10 @@ Runs one college. (The Super Admin can do all of this too, through the college s
 ### 3.6 College settings
 1. **Team size:** minimum (≥ 2) and maximum members.
 2. **Default mentor capacity** used when adding mentors.
-3. **Team formation on/off** — students can create and join teams only while on.
-4. **Lock teams** (whole college) — students can no longer change teams; the Admin still can.
-5. **Cross-section evaluation** — allows choosing an evaluator who doesn't teach the subject in any team member's
-   section.
+3. **Team formation open** (one switch) — while on, students create, join and leave teams. Turning it off
+   locks every team (whole college): students can no longer change teams, Team Lead changes stop moving
+   evaluators, and only the Admin can change teams. Turning it on again unlocks them.
+4. The Admin can set any active faculty member as a team's evaluator (no cross-section restriction).
 
 ### 3.7 Phases (per subject offering)
 1. **Create a phase.** Information: **subject**, **name** (unique per subject), short description, details,

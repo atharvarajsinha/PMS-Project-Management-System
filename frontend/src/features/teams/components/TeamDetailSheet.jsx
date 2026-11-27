@@ -157,7 +157,7 @@ function EvaluatorSection({ team }) {
   return (
     <Section
       title="Evaluators"
-      description="Automatic = the faculty teaching this subject in the Team Lead's section. Cross-section choices need the setting turned on."
+      description="Automatic = the faculty teaching this subject in the Team Lead's section. You can pick any active faculty member instead."
     >
       <ul className="divide-y rounded-md border">
         {team.evaluators.map((e) => (

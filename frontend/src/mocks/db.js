@@ -90,7 +90,6 @@ function defaultSettings(collegeId, at) {
     team_formation_enabled: false,
     teams_locked: false,
     teams_locked_at: null,
-    allow_cross_section_evaluation: false,
     updated_by_id: null,
     updated_at: at,
   };

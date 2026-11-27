@@ -256,7 +256,6 @@ After changing `choices.py`, run `python manage.py export_choices` (a test fails
   "team_formation_enabled": false,
   "teams_locked": false,
   "teams_locked_at": null,
-  "allow_cross_section_evaluation": false,
   "updated_by": { "id": 1, "name": "…", "email": "…" },
   "updated_at": "…"
 }
@@ -540,13 +539,13 @@ Hard-deletes the college and **everything** in it. `confirm` must equal the coll
   "min_team_size": 2,
   "max_team_size": 4,
   "default_mentor_capacity": 5,
-  "team_formation_enabled": true,
-  "teams_locked": false,
-  "allow_cross_section_evaluation": false
+  "team_formation_enabled": true
 }
 ```
 Rules: `min_team_size ≥ 2`, `max_team_size ≥ min_team_size`, `max_team_size ≤ 20`, `default_mentor_capacity` 1–100.
-Setting `teams_locked: true` stamps `teams_locked_at`. → `200 CollegeSettings`.
+`team_formation_enabled` is the one team switch. Turning it off (after it was on) locks every team:
+`teams_locked` becomes true and `teams_locked_at` is stamped. Turning it on clears both. `teams_locked` and
+`teams_locked_at` are read-only. → `200 CollegeSettings`.
 (Team settings take effect in Phase 2.)
 
 ---
@@ -975,7 +974,7 @@ gives every existing team its default evaluator for it.
 | POST | `/teams/{id}/add-member/` · `/remove-member/` · `/change-lead/` | `{student_id}` |
 | POST | `/teams/{id}/assign-mentor/` | `{faculty_id, replace=true, override_capacity=false}` |
 | POST | `/teams/{id}/remove-mentor/` | `{assignment_id}` |
-| POST | `/teams/{id}/set-evaluator/` | `{evaluator_id or null, phase_ids?}`; null resets to AUTO; no `phase_ids` = every unlocked phase. With cross-section evaluation off, the faculty must teach this subject in a section of a team member |
+| POST | `/teams/{id}/set-evaluator/` | `{evaluator_id or null, phase_ids?}`; null resets to AUTO; no `phase_ids` = every unlocked phase. Any active faculty member of the college may be chosen |
 | GET | `/teams/unassigned-students/?semester_subject_id=` | eligible students with no team for that subject |
 
 `Team`: `{id, name, display_name, semester_subject, lead, members[{…student, role, joined_at}], members_count,

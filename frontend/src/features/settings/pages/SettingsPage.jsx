@@ -23,8 +23,6 @@ const FIELDS = [
   "max_team_size",
   "default_mentor_capacity",
   "team_formation_enabled",
-  "teams_locked",
-  "allow_cross_section_evaluation",
 ];
 
 const int = (min, max, msg) => z.coerce.number({ invalid_type_error: "Enter a number" }).int("Whole numbers only").min(min, msg).max(max, msg);
@@ -35,8 +33,6 @@ const schema = z
     max_team_size: int(2, 20, "Between 2 and 20"),
     default_mentor_capacity: int(1, 100, "Between 1 and 100"),
     team_formation_enabled: z.boolean(),
-    teams_locked: z.boolean(),
-    allow_cross_section_evaluation: z.boolean(),
   })
   .refine((v) => v.max_team_size >= v.min_team_size, { path: ["max_team_size"], message: "Must be at least the minimum size" });
 
@@ -64,7 +60,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const [formError, setFormError] = useState(null);
-  const [pendingValues, setPendingValues] = useState(null); // confirm before locking teams
+  const [pendingValues, setPendingValues] = useState(null); // confirm before closing formation (locks teams)
   const form = useForm({ resolver: zodResolver(schema), mode: "onTouched" });
 
   useEffect(() => {
@@ -84,7 +80,7 @@ export default function SettingsPage() {
   };
 
   const onSubmit = (values) => {
-    if (values.teams_locked && !query.data.teams_locked) return setPendingValues(values);
+    if (!values.team_formation_enabled && query.data.team_formation_enabled) return setPendingValues(values);
     return save(values).catch(() => {});
   };
 
@@ -134,27 +130,16 @@ export default function SettingsPage() {
                   control={form.control}
                   name="team_formation_enabled"
                   label="Team formation open"
-                  description="Students can create and join teams."
-                />
-                <SwitchField
-                  control={form.control}
-                  name="teams_locked"
-                  label="Lock all teams"
                   description={
-                    s?.teams_locked_at ? (
-                      <span className="inline-flex items-center gap-1">
-                        <Lock className="size-3" aria-hidden /> Locked {formatDateTime(s.teams_locked_at)}
-                      </span>
-                    ) : (
-                      "Freezes every team; no joins, leaves or changes."
-                    )
+                    <>
+                      On: students create, join and leave teams. Off: every team is locked; only you can change teams.
+                      {s?.teams_locked_at && (
+                        <span className="mt-1 flex items-center gap-1">
+                          <Lock className="size-3" aria-hidden /> Teams locked {formatDateTime(s.teams_locked_at)}
+                        </span>
+                      )}
+                    </>
                   }
-                />
-                <SwitchField
-                  control={form.control}
-                  name="allow_cross_section_evaluation"
-                  label="Cross-section evaluation"
-                  description="Evaluators may be assigned teams outside their own sections."
                 />
               </div>
             </section>
@@ -171,9 +156,9 @@ export default function SettingsPage() {
       <ConfirmDialog
         open={!!pendingValues}
         onOpenChange={() => setPendingValues(null)}
-        title="Lock all teams?"
-        description="Students won't be able to create, join or leave teams until you unlock them."
-        confirmLabel="Lock and save"
+        title="Close team formation?"
+        description="Every team is locked: students can't create, join or leave teams, and changing a Team Lead no longer moves evaluators. Turn it on again to reopen."
+        confirmLabel="Close and lock"
         onConfirm={() => save(pendingValues)}
       />
     </>

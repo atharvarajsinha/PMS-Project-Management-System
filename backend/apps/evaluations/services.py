@@ -80,31 +80,13 @@ def sync_section_subject(section_subject):
 # ---------------------------------------------------------------- admin override
 
 
-def allowed_evaluator_ids(team):
-    """Without cross-section evaluation: faculty teaching this subject in a section of any team member."""
-    member_sections = team.members.values_list("student__section_id", flat=True)
-    return set(
-        SectionSubject.objects.filter(
-            semester_subject_id=team.semester_subject_id, section_id__in=member_sections, faculty__isnull=False
-        ).values_list("faculty_id", flat=True)
-    )
-
-
 @transaction.atomic
 def override_evaluator(team, faculty, phases, by_user, settings):
-    """Set `faculty` as evaluator of `team` for `phases`; faculty=None resets them to AUTO."""
+    """Set `faculty` as evaluator of `team` for `phases`; faculty=None resets them to AUTO.
+    The Admin may pick any active faculty member of the college, whatever they teach."""
     if faculty is not None:
         if faculty.user.status != faculty.user.Status.ACTIVE:
             raise InvalidInput(details={"evaluator_id": ["This faculty account is inactive."]})
-        if not settings.allow_cross_section_evaluation and faculty.id not in allowed_evaluator_ids(team):
-            raise InvalidInput(
-                details={
-                    "evaluator_id": [
-                        "Cross-section evaluation is off: pick a faculty member who teaches this subject "
-                        "in a section of one of the team's members, or turn it on in Settings."
-                    ]
-                }
-            )
     default_id = default_evaluator_id(team)
     changed = []
     rows = EvaluatorAssignment.objects.select_for_update().filter(team=team, phase__in=phases).select_related("phase")
