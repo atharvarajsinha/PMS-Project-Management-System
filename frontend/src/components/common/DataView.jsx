@@ -23,13 +23,13 @@ export default function DataView({ columns, rows, renderCard, loading, error, on
     );
   }
 
-  if (!rows?.length) return <div className="rounded-2xl border border-border/70 bg-card shadow-soft">{empty}</div>;
+  if (!rows?.length) return <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft">{empty}</div>;
 
   if (!isDesktop) {
     return (
       <ul className="space-y-3">
         {rows.map((row) => (
-          <li key={rowKey(row)} className="rounded-2xl border border-border/70 bg-card p-4 shadow-soft">
+          <li key={rowKey(row)} className="rounded-[1.25rem] border border-border/80 bg-card p-4 shadow-soft">
             {renderCard(row)}
           </li>
         ))}
@@ -38,15 +38,15 @@ export default function DataView({ columns, rows, renderCard, loading, error, on
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card shadow-soft">
+    <div className="relative overflow-x-auto rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <TableRow className="bg-muted/60 hover:bg-muted/60">
             {columns.map((c) => (
               <TableHead
                 key={c.key}
                 scope="col"
-                className={cn("text-xs font-medium uppercase tracking-wide text-muted-foreground", c.className)}
+                className={cn("font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground", c.className)}
               >
                 {c.header}
               </TableHead>
@@ -55,7 +55,7 @@ export default function DataView({ columns, rows, renderCard, loading, error, on
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={rowKey(row)} className="h-12 hover:bg-accent/50">
+            <TableRow key={rowKey(row)} className="h-14 hover:bg-accent/40">
               {columns.map((c) => (
                 <TableCell key={c.key} className={cn("text-sm", c.className)}>
                   {c.cell(row)}

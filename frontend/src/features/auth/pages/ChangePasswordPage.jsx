@@ -18,7 +18,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-center text-3xl font-bold tracking-tight md:text-4xl">Set your password</h1>
+      <h1 className="mb-2 text-center text-2xl font-bold tracking-tight sm:text-3xl">Set your password</h1>
       <p className="mb-8 text-center text-sm text-muted-foreground">
         You're signed in with a temporary password. Choose a new one to continue.
       </p>

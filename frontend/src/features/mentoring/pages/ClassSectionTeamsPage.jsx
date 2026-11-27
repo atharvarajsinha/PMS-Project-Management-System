@@ -93,7 +93,7 @@ export default function ClassSectionTeamsPage() {
             {d.summary.map((s) => {
               const subject = d.subjects.find((x) => x.id === s.semester_subject_id);
               return (
-                <div key={s.semester_subject_id} className="rounded-lg border bg-card p-4">
+                <div key={s.semester_subject_id} className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
                   <p className="text-xs text-muted-foreground">{subject.subject.code}</p>
                   <p className="mt-1 text-lg font-semibold tabular-nums">
                     {s.in_team} <span className="text-sm font-normal text-muted-foreground">in teams</span>
@@ -123,13 +123,13 @@ export default function ClassSectionTeamsPage() {
               />
             </div>
           ) : isDesktop ? (
-            <div className="overflow-x-auto rounded-lg border">
+            <div className="relative overflow-x-auto rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Student</TableHead>
+                  <TableRow className="bg-muted/60 hover:bg-muted/60">
+                    <TableHead className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Student</TableHead>
                     {subjects.map((s) => (
-                      <TableHead key={s.id} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <TableHead key={s.id} className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
                         {s.subject.code}
                       </TableHead>
                     ))}
@@ -158,7 +158,7 @@ export default function ClassSectionTeamsPage() {
           ) : (
             <ul className="space-y-3">
               {students.map((row) => (
-                <li key={row.student.id} className="space-y-3 rounded-lg border bg-card p-4">
+                <li key={row.student.id} className="space-y-3 rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-medium">{row.student.name}</p>

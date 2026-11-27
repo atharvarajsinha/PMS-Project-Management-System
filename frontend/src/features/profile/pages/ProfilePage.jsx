@@ -58,7 +58,7 @@ export default function ProfilePage() {
     <>
       <PageHeader title="Profile" description="Your personal details and password." />
       <div className="grid items-start gap-8 xl:grid-cols-[1fr_380px]">
-        <section className="rounded-lg border bg-card p-4 md:p-6" aria-labelledby="details-title">
+        <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6" aria-labelledby="details-title">
           <h2 id="details-title" className="mb-6 text-lg font-semibold">
             Details
           </h2>
@@ -121,7 +121,7 @@ export default function ProfilePage() {
           </Form>
         </section>
 
-        <section className="rounded-lg border bg-card p-4 md:p-6" aria-labelledby="password-title">
+        <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6" aria-labelledby="password-title">
           <h2 id="password-title" className="mb-6 text-lg font-semibold">
             Change password
           </h2>

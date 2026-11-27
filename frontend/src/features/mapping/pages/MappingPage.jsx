@@ -162,7 +162,7 @@ export default function MappingPage() {
         actions={<ImportButton kind="subject-mappings" />}
       />
       <Tabs value={params.tab} onValueChange={changeTab}>
-        <div className="mb-6 overflow-x-auto">
+        <div className="relative mb-6 overflow-x-auto">
           <TabsList>
             {TABS.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>

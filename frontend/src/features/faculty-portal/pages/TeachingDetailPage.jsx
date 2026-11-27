@@ -56,11 +56,11 @@ export default function TeachingDetailPage() {
       ) : (
         t && (
           <dl className="mb-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
               <dt className="text-xs text-muted-foreground">Students</dt>
               <dd className="mt-1 text-2xl font-semibold tabular-nums">{t.students_count}</dd>
             </div>
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
               <dt className="text-xs text-muted-foreground">Class coordinator</dt>
               <dd className="mt-1 flex items-center gap-2 text-sm font-medium">
                 <UserCheck className="size-4 text-muted-foreground" aria-hidden />
@@ -68,7 +68,7 @@ export default function TeachingDetailPage() {
               </dd>
               {t.class_teacher && <dd className="truncate text-xs text-muted-foreground">{t.class_teacher.email}</dd>}
             </div>
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
               <dt className="text-xs text-muted-foreground">Assigned to you</dt>
               <dd className="mt-1 text-sm font-medium">
                 {formatDate(t.faculty_assigned_at)}

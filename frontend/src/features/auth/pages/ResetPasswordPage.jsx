@@ -170,7 +170,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-center text-3xl font-bold tracking-tight md:text-4xl">
+      <h1 className="mb-6 text-center text-2xl font-bold tracking-tight sm:text-3xl">
         {resetToken ? "Set new password" : "Enter code"}
       </h1>
       {resetToken ? (

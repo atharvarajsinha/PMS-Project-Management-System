@@ -34,13 +34,21 @@ export default function MobileNav({ groups }) {
             end={item.end}
             className={({ isActive }) => cn(itemClass, isActive && "font-semibold text-primary")}
           >
-            <item.icon className="size-6" strokeWidth={1.75} aria-hidden />
-            <span className="max-w-full truncate px-1">{item.short || item.label}</span>
+            {({ isActive }) => (
+              <>
+                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", isActive && "bg-accent")}>
+                  <item.icon className="size-5" strokeWidth={1.8} aria-hidden />
+                </span>
+                <span className="max-w-full truncate px-1">{item.short || item.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
         {rest.length > 0 && (
           <button type="button" className={itemClass} onClick={() => setMoreOpen(true)}>
-            <MoreHorizontal className="size-6" strokeWidth={1.75} aria-hidden />
+            <span className="flex h-7 w-12 items-center justify-center">
+              <MoreHorizontal className="size-5" strokeWidth={1.8} aria-hidden />
+            </span>
             More
           </button>
         )}

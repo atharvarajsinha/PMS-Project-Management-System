@@ -5,9 +5,9 @@ const ThemeContext = createContext(null);
 
 function readStored() {
   try {
-    return localStorage.getItem(STORAGE_KEY) || "dark";
+    return localStorage.getItem(STORAGE_KEY) || "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
@@ -21,7 +21,7 @@ export function ThemeProvider({ children }) {
       const isDark = theme === "dark" || (theme === "system" && media.matches);
       root.classList.toggle("dark", isDark);
       root.style.colorScheme = isDark ? "dark" : "light";
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#F2FAFF");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#FCFCFE");
     };
     apply();
     if (theme === "system") {

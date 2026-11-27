@@ -1,4 +1,6 @@
 import "@fontsource-variable/inter";
+import "@fontsource-variable/outfit";
+import "@fontsource-variable/fraunces";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import "./index.css";

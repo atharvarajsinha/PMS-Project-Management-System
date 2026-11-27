@@ -175,10 +175,10 @@ export default function MappingGrid({ semesterId: selected, onSemesterChange }) 
       ) : !offerings.length ? (
         <EmptyState icon={Network} title="No subjects in this semester" description="Use “Add subject to semester” above, then map it to sections and pick who teaches each." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
+        <div className="relative overflow-x-auto rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/40 text-left">
+              <tr className="border-b bg-muted/60 text-left font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
                 <th scope="col" className="sticky left-0 z-10 bg-card px-4 py-3 font-medium">Subject</th>
                 {sections.sections.map((s) => (
                   <th key={s.id} scope="col" className="min-w-56 px-3 py-3 font-medium">

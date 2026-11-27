@@ -47,7 +47,7 @@ export default function FacultyDashboard() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <div className="space-y-8">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatTile label="Class sections" value={d?.counts.class_sections} icon={LayoutGrid} loading={loading} />
             <StatTile label="Students in my classes" value={d?.counts.class_students} icon={Users} loading={loading} />
             <StatTile label="Subjects I teach" value={d?.counts.teaching_subjects} icon={BookOpen} loading={loading} />
@@ -73,7 +73,7 @@ export default function FacultyDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border bg-card">
+              <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
                 <EmptyState
                   icon={LayoutGrid}
                   title="You're not a class coordinator"
@@ -91,8 +91,8 @@ export default function FacultyDashboard() {
               ) : d.teaching.length ? (
                 <div className="space-y-4">
                   {groupBySemester(d.teaching).map(([semester, rows]) => (
-                    <div key={semester} className="rounded-lg border bg-card">
-                      <p className="border-b px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <div key={semester} className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
+                      <p className="border-b px-4 py-2 bg-muted/60 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
                         Semester {semester}
                       </p>
                       <ul className="divide-y">
@@ -119,7 +119,7 @@ export default function FacultyDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-lg border bg-card">
+                <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft">
                   <EmptyState
                     icon={BookOpen}
                     title="No teaching assignments yet"

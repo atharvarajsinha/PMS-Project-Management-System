@@ -12,8 +12,9 @@ export default function RefreshButton() {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
+          className="size-10 rounded-xl text-primary"
           aria-label="Refresh data"
           onClick={() => queryClient.refetchQueries({ type: "active" })}
         >

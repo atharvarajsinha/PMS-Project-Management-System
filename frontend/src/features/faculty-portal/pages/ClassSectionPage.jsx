@@ -179,11 +179,11 @@ export default function ClassSectionPage() {
       {section.isLoading && <Skeleton className="mb-6 h-24 w-full" />}
       {s && (
         <section className="mb-6 grid gap-4 md:grid-cols-[minmax(0,14rem)_1fr]">
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
             <p className="text-xs text-muted-foreground">Students</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{s.students_count}</p>
           </div>
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4">
             <p className="text-xs text-muted-foreground">Subjects in this section</p>
             {s.subjects.length ? (
               <ul className="mt-2 flex flex-wrap gap-2">

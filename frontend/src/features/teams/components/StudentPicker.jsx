@@ -27,7 +27,7 @@ export default function StudentPicker({
 
   return (
     <div className="space-y-2">
-      <SearchInput value={search} onChange={setSearch} placeholder="Search by name or roll number…" />
+      <SearchInput value={search} onChange={setSearch} placeholder="Search by name or roll number…" className="sm:w-full" />
       <ul className="max-h-64 divide-y overflow-y-auto rounded-md border" aria-busy={query.isFetching}>
         {rows.map((s) => (
           <li key={s.id} className="flex min-h-11 items-center justify-between gap-3 px-3 py-1.5">

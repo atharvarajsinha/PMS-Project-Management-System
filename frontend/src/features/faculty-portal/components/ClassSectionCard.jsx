@@ -9,7 +9,7 @@ import { sectionLabel } from "@/features/faculty-portal/components/PortalBits";
 export default function ClassSectionCard({ sectionId, semesterNumber, sectionName, studentsCount, inactiveCount, subjectsCount }) {
   const [marksOpen, setMarksOpen] = useState(false);
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:border-primary/40 md:p-5">
+    <div className="flex flex-col gap-3 rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 transition-colors hover:border-primary/40 md:p-5">
       <Link to={`/faculty/classes/${sectionId}`} className="group flex flex-col gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
