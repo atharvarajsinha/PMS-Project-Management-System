@@ -5,7 +5,7 @@ import { z } from "zod";
 import FormActions from "@/components/common/FormActions";
 import FormDialog from "@/components/common/FormDialog";
 import FormError from "@/components/common/FormError";
-import { Form, SelectField, TextField } from "@/components/common/fields";
+import { Form, MarkdownField, SelectField, TextField } from "@/components/common/fields";
 import { createPhase, phasesInvalidate, updatePhase } from "@/features/phases/api";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useOfferingOptions } from "@/hooks/useLookups";
@@ -94,7 +94,14 @@ export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOffe
           />
           <TextField control={form.control} name="name" label="Name" required placeholder="Project Proposal" />
           <TextField control={form.control} name="short_description" label="Short description" placeholder="One line shown in lists" />
-          <TextField control={form.control} name="description" label="Details" multiline rows={4} placeholder="What teams must submit" />
+          <MarkdownField
+            control={form.control}
+            name="description"
+            label="Details"
+            rows={6}
+            placeholder="What teams must submit"
+            description="Select text and use the toolbar (or Ctrl+B / Ctrl+I) for bold, italic, lists and links."
+          />
           <div className="grid gap-6 sm:grid-cols-2">
             <TextField control={form.control} name="start_date" label="Start date" type="date" required />
             <TextField control={form.control} name="end_date" label="End date" type="date" required description="Last day for submissions." />

@@ -8,6 +8,7 @@ import RequiredMark from "@/components/common/RequiredMark";
 import { optionsOf } from "@/config/choices";
 import { idStr } from "@/lib/ids";
 import { cn } from "@/lib/utils";
+import { MarkdownEditor } from "@/components/common/Markdown";
 
 export { Form };
 
@@ -26,6 +27,29 @@ export function TextField({ control, name, label, required, description, classNa
           </FormLabel>
           <FormControl>
             <Comp {...field} value={field.value ?? ""} {...inputProps} />
+          </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+/** Textarea with a bold / italic / list / link toolbar; the value is Markdown (shown with <Markdown>). */
+export function MarkdownField({ control, name, label, required, description, className, ...editorProps }) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={cn("space-y-3", className)}>
+          <FormLabel>
+            {label}
+            {required && <RequiredMark />}
+          </FormLabel>
+          <FormControl>
+            <MarkdownEditor {...field} {...editorProps} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />

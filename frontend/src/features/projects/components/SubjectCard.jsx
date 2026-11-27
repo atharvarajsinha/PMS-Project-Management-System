@@ -32,6 +32,7 @@ import StudentPicker from "@/features/teams/components/StudentPicker";
 import { EvaluatorLine, LinkList, MemberList, PhaseStatus, PhaseWindows, ProjectPhaseBadge, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
+import { Markdown } from "@/components/common/Markdown";
 
 const invalidate = [projectsKey];
 
@@ -190,7 +191,9 @@ function PhaseSlide({ phase: p, team, canSubmit, onSubmit }) {
         {p.description && (
           <>
             <dt className="font-medium text-muted-foreground">Details</dt>
-            <dd className="whitespace-pre-wrap">{p.description}</dd>
+            <dd>
+              <Markdown>{p.description}</Markdown>
+            </dd>
           </>
         )}
         {team && (
