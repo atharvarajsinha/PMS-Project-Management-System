@@ -70,8 +70,9 @@ def me_payload(user):
 @extend_schema(tags=["auth"], responses={204: None})
 class CsrfView(PublicAuthView):
     def get(self, request):
-        get_token(request)  # CsrfViewMiddleware sets the csrftoken cookie on the response
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        token = get_token(request)  # CsrfViewMiddleware sets the csrftoken cookie on the response
+        # Also in a header: a frontend on another domain can't read our cookie (CORS exposes this header)
+        return Response(status=status.HTTP_204_NO_CONTENT, headers={"X-CSRFToken": token})
 
 
 @extend_schema(tags=["auth"], request=LoginSerializer, responses={200: MeSerializer})

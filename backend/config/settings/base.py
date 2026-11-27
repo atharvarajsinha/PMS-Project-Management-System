@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 from corsheaders.defaults import default_headers as default_cors_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -20,6 +21,9 @@ FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[FRONTEND_URL])
 CORS_ALLOW_CREDENTIALS = True  # cookies (JWT + csrftoken)
 CORS_ALLOW_HEADERS = (*default_cors_headers, "x-college-id")
+# A frontend on another domain cannot read our cookies: it takes the CSRF token from this header
+# (GET /auth/csrf/) and the download filename from Content-Disposition.
+CORS_EXPOSE_HEADERS = ["X-CSRFToken", "Content-Disposition"]
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=CORS_ALLOWED_ORIGINS)
 
 INSTALLED_APPS = [
@@ -126,14 +130,21 @@ SIMPLE_JWT = {
 }
 
 AUTH_COOKIE_SECURE = env.bool("AUTH_COOKIE_SECURE", default=not DEBUG)
-AUTH_COOKIE_SAMESITE = "Lax"
+# "Lax" when the frontend proxies /api through its own origin (dev server, Vercel rewrite).
+# "None" when the frontend calls this backend directly from another domain; needs HTTPS (Secure).
+COOKIE_SAMESITE = env("COOKIE_SAMESITE", default="Lax")
+if COOKIE_SAMESITE not in ("Lax", "Strict", "None"):
+    raise ImproperlyConfigured("COOKIE_SAMESITE must be Lax, Strict or None")
+if COOKIE_SAMESITE == "None" and not AUTH_COOKIE_SECURE:
+    raise ImproperlyConfigured("COOKIE_SAMESITE=None requires AUTH_COOKIE_SECURE=True (HTTPS)")
+AUTH_COOKIE_SAMESITE = COOKIE_SAMESITE
 AUTH_ACCESS_COOKIE = "pms_access"
 AUTH_REFRESH_COOKIE = "pms_refresh"
 AUTH_REFRESH_COOKIE_PATH = "/api/v1/auth/"
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = COOKIE_SAMESITE
 CSRF_COOKIE_SECURE = AUTH_COOKIE_SECURE
 CSRF_COOKIE_AGE = 60 * 60 * 24 * 365
 

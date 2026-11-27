@@ -7,7 +7,14 @@ const api = axios.create({
   timeout: 20000,
 });
 
-export const loadCsrf = () => api.get("/auth/csrf/");
+// CSRF token from GET /auth/csrf/ (X-CSRFToken header). When the API is on another domain the
+// csrftoken cookie belongs to that domain and document.cookie can't see it, so keep it here.
+let csrfToken = null;
+export const loadCsrf = () =>
+  api.get("/auth/csrf/").then((res) => {
+    csrfToken = res.headers?.["x-csrftoken"] || csrfToken;
+    return res;
+  });
 
 function getCookie(name) {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
@@ -22,7 +29,7 @@ export const setCollegeContext = (id) => {
 api.interceptors.request.use((config) => {
   const method = (config.method || "get").toUpperCase();
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
-    const token = getCookie("csrftoken");
+    const token = csrfToken || getCookie("csrftoken");
     if (token) config.headers["X-CSRFToken"] = token;
   }
   if (collegeId && !config.url?.startsWith("/platform/")) config.headers["X-College-Id"] = collegeId;
