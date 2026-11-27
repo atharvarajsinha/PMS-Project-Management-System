@@ -6,6 +6,9 @@
 - /my/class-sections/{id}/teams/{student}/ — one student in detail, including their marks per phase.
 """
 
+from datetime import date
+from decimal import Decimal
+
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
@@ -18,7 +21,7 @@ from rest_framework.views import APIView
 from apps.academics.models import Section, SemesterSubject
 from apps.accounts.models import Faculty, Student
 from apps.common import audit
-from apps.common.choices import MENTOR_ACTIVE_STATUSES, MentorStatus, TeamRole
+from apps.common.choices import MENTOR_ACTIVE_STATUSES, EvaluationStatus, MentorStatus, TeamRole
 from apps.common.permissions import IsFaculty
 from apps.common.tenancy import CollegeScopedMixin
 
@@ -278,11 +281,88 @@ class ClassStudentProjectView(FacultyMixin, APIView):
 
 
 @extend_schema(tags=["faculty-portal"], responses={200: dict})
-class ClassSectionMarksView(FacultyMixin, APIView):
-    """GET /my/class-sections/{section_pk}/marks/ — class teacher: every student's marks, per subject
-    and phase (one column per phase). `status` is the evaluation's status (DRAFT marks may still change)."""
+def _marks_number(value):
+    return int(value) if value == int(value) else float(value)
 
+
+def class_marks_sheets(data, only_subject_id=None):
+    """The class marks payload as spreadsheet tables: [(title, header, rows)], one per subject.
+
+    A draft mark (the evaluator may still change it) is written as e.g. "12 (draft)"; a phase not
+    evaluated yet is left empty.
+    """
+    sheets = []
+    for subject in data["subjects"]:
+        ss = subject["semester_subject"]
+        if only_subject_id is not None and ss["id"] != only_subject_id:
+            continue
+        phases = subject["phases"]
+        header = ["Roll number", "Name", "Team"]
+        header += [f"{p['order']}. {p['name']} (/{_marks_number(Decimal(p['max_marks']))})" for p in phases]
+        header.append(f"Total (/{_marks_number(Decimal(subject['total_max_marks']))})")
+        rows = []
+        for row in data["students"]:
+            cell = row["subjects"].get(str(ss["id"])) or {}
+            team = cell.get("team")
+            line = [row["student"]["roll_number"], row["student"]["name"], team["display_name"] if team else "No team"]
+            for p in phases:
+                m = (cell.get("marks") or {}).get(str(p["id"]))
+                if m is None:
+                    line.append("")
+                else:
+                    value = _marks_number(Decimal(m["marks"]))
+                    line.append(value if m["status"] == EvaluationStatus.SUBMITTED else f"{value} (draft)")
+            total = cell.get("total")
+            line.append(_marks_number(Decimal(total)) if total is not None else "")
+            rows.append(line)
+        sheets.append((ss["subject"]["code"], header, rows))
+    return sheets
+
+
+class ClassSectionMarksView(FacultyMixin, APIView):
+    """GET /my/class-sections/{section_pk}/marks/ — class coordinator: every student's marks, per subject
+    and phase (one column per phase). `status` is the evaluation's status (DRAFT marks may still change).
+
+    With `file_format=csv|xlsx` it downloads the same marks instead: Excel has a sheet per subject;
+    CSV holds one subject, so it needs `semester_subject_id`.
+    """
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("file_format", str, enum=["csv", "xlsx"], description="Download as a file instead of JSON"),
+            OpenApiParameter("semester_subject_id", int, description="Only this subject (required for CSV)"),
+        ]
+    )
     def get(self, request, section_pk):
+        data = self._data(request, section_pk)
+        fmt = request.query_params.get("file_format")
+        if not fmt:
+            return Response(data)
+        return self._download(data, fmt.lower(), request.query_params.get("semester_subject_id"))
+
+    def _download(self, data, fmt, subject_param):
+        from apps.common.exceptions import InvalidInput
+        from apps.imports.reports import file_response
+
+        only = None
+        if subject_param:
+            try:
+                only = int(subject_param)
+            except ValueError:
+                raise InvalidInput(details={"semester_subject_id": ["Enter a valid id."]}) from None
+        elif fmt == "csv":
+            raise InvalidInput(
+                "Choose a subject: a CSV file holds one subject.", {"semester_subject_id": ["This field is required."]}
+            )
+        sheets = class_marks_sheets(data, only)
+        if not sheets:
+            raise InvalidInput(details={"semester_subject_id": ["This section doesn't take that subject."]})
+        section = data["section"]
+        label = f"sem{section['semester_number']}-{section['name']}" + (f"-{sheets[0][0]}" if only else "")
+        name = f"pms-marks-{label}-{date.today().isoformat()}".replace(" ", "_").replace("/", "-")
+        return file_response(sheets, fmt, lambda ext: f"{name}.{ext}")
+
+    def _data(self, request, section_pk):
         from apps.evaluations.models import StudentMark
         from apps.projects.models import Phase
 
@@ -353,10 +433,8 @@ class ClassSectionMarksView(FacultyMixin, APIView):
                 }
             return {"student": {**StudentBriefSerializer(student).data, "status": student.user.status}, "subjects": cells}
 
-        return Response(
-            {
-                "section": {"id": section.id, "name": section.name, "semester_number": section.semester.semester_number},
-                "subjects": subjects,
-                "students": [student_row(s) for s in students],
-            }
-        )
+        return {
+            "section": {"id": section.id, "name": section.name, "semester_number": section.semester.semester_number},
+            "subjects": subjects,
+            "students": [student_row(s) for s in students],
+        }

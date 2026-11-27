@@ -269,3 +269,28 @@ class ProgressAndClassTeacherMarksTests(MarksBase):
         self.assertEqual((cell["marks"][str(phase.id)], cell["total"]), ({"marks": "14.00", "status": "SUBMITTED"}, "14.00"))
         self.assertNotIn(self.b1.id, [row["student"]["id"] for row in data["students"]])  # section B
         self.assertEqual(self.as_faculty(self.y).get(f"/api/v1/my/class-sections/{self.a.id}/marks/").status_code, 404)
+
+    def test_class_teacher_marks_download(self):
+        import io
+
+        from openpyxl import load_workbook
+
+        phase = self.make_phase(start=-1, end=1, name="Proposal")
+        self.submit_work(phase)
+        self.marks(self.x_api, phase, 10, students={self.a1: 14}, submit=False)  # draft
+        url = f"/api/v1/my/class-sections/{self.a.id}/marks/"
+        # CSV: one subject
+        self.assertError(self.x_api.get(url, {"file_format": "csv"}), 400, "VALIDATION_ERROR")
+        r = self.x_api.get(url, {"file_format": "csv", "semester_subject_id": self.daa.id})
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertIn("attachment;", r["Content-Disposition"])
+        lines = r.content.decode("utf-8-sig").splitlines()
+        self.assertEqual(lines[0], "Roll number,Name,Team,1. Proposal (/20),Total (/20)")
+        self.assertIn("A1,Asha,", lines[1])
+        self.assertIn("14 (draft),14", lines[1])
+        # Excel: a sheet per subject of the section (DAA, DSA)
+        r = self.x_api.get(url, {"file_format": "xlsx"})
+        self.assertEqual(r.status_code, 200)
+        wb = load_workbook(io.BytesIO(r.content))
+        self.assertEqual(wb.sheetnames, ["DAA", "DSA"])
+        self.assertEqual(self.as_faculty(self.y).get(url, {"file_format": "xlsx"}).status_code, 404)

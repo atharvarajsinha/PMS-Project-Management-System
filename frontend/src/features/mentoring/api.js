@@ -1,4 +1,5 @@
 import { get, post } from "@/lib/api";
+import { downloadFile } from "@/features/reports/api";
 
 // Faculty as mentor: requests and mentored teams
 export const listMentoring = (params) => get("/my/mentoring/", params);
@@ -11,3 +12,6 @@ export const rejectMentoring = (id, note) => post(`/my/mentoring/${id}/reject/`,
 export const getClassSectionTeams = (sectionId) => get(`/my/class-sections/${sectionId}/teams/`);
 export const getClassStudentProject = (sectionId, studentId) => get(`/my/class-sections/${sectionId}/teams/${studentId}/`);
 export const getClassSectionMarks = (sectionId) => get(`/my/class-sections/${sectionId}/marks/`);
+// format: "csv" (one subject: pass semesterSubjectId) or "xlsx" (all subjects, a sheet each, unless one is given)
+export const downloadClassSectionMarks = (sectionId, format, semesterSubjectId) =>
+  downloadFile(`/my/class-sections/${sectionId}/marks/`, { file_format: format, semester_subject_id: semesterSubjectId }, `pms-marks.${format}`);

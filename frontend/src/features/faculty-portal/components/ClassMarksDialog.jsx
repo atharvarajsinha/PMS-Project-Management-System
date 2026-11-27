@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import Carousel from "@/components/common/Carousel";
 import EmptyState from "@/components/common/EmptyState";
@@ -7,7 +17,8 @@ import ErrorState from "@/components/common/ErrorState";
 import FormDialog from "@/components/common/FormDialog";
 import { EvaluationStatus } from "@/config/choices";
 import { sectionLabel } from "@/features/faculty-portal/components/PortalBits";
-import { getClassSectionMarks } from "@/features/mentoring/api";
+import { downloadClassSectionMarks, getClassSectionMarks } from "@/features/mentoring/api";
+import { toastError } from "@/lib/forms";
 import { PhaseStatus } from "@/features/teams/components/TeamBits";
 
 const n = (v) => Number(v);
@@ -74,7 +85,50 @@ function SubjectMarks({ subject, students }) {
   );
 }
 
-/** Class teacher: marks of every student of the section, subject by subject, one column per phase. */
+/** Download the marks: this subject as CSV / Excel, or every subject as one Excel file (a sheet per subject). */
+function DownloadMarks({ sectionId, subject }) {
+  const [busy, setBusy] = useState(false);
+  const run = async (format, semesterSubjectId) => {
+    setBusy(true);
+    try {
+      await downloadClassSectionMarks(sectionId, format, semesterSubjectId);
+    } catch (e) {
+      toastError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const code = subject?.semester_subject.subject.code;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" disabled={busy}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download <ChevronDown className="size-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {subject && (
+          <>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{code} only</DropdownMenuLabel>
+            <DropdownMenuItem onSelect={() => run("csv", subject.semester_subject.id)}>
+              <FileText className="size-4" /> CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => run("xlsx", subject.semester_subject.id)}>
+              <FileSpreadsheet className="size-4" /> Excel
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">All subjects</DropdownMenuLabel>
+        <DropdownMenuItem onSelect={() => run("xlsx")}>
+          <FileSpreadsheet className="size-4" /> Excel (a sheet per subject)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Class coordinator: marks of every student of the section, subject by subject, one column per phase. */
 export default function ClassMarksDialog({ sectionId, semesterNumber, sectionName, open, onOpenChange }) {
   const [index, setIndex] = useState(0);
   const query = useQuery({ queryKey: ["my", "class-sections", sectionId, "marks"], queryFn: () => getClassSectionMarks(sectionId), enabled: open });
@@ -96,6 +150,10 @@ export default function ClassMarksDialog({ sectionId, semesterNumber, sectionNam
       ) : !d.subjects.length || !d.students.length ? (
         <EmptyState title="Nothing to show" description={!d.students.length ? "This section has no students yet." : "This section has no subjects yet."} />
       ) : (
+        <div className="space-y-3">
+        <div className="flex justify-end">
+          <DownloadMarks sectionId={sectionId} subject={d.subjects[index]} />
+        </div>
         <Carousel
           label="Subjects"
           size="sm"
@@ -111,6 +169,7 @@ export default function ClassMarksDialog({ sectionId, semesterNumber, sectionNam
           )}
           renderItem={(s) => <SubjectMarks subject={s} students={d.students} />}
         />
+        </div>
       )}
       </div>
     </FormDialog>
