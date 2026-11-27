@@ -4,6 +4,7 @@ import { Check, Crown, LogOut, Mail, Send, Trash2, UserMinus, UserPlus, X } from
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Carousel from "@/components/common/Carousel";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import FormDialog from "@/components/common/FormDialog";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -28,9 +29,9 @@ import {
   requestMentor,
 } from "@/features/projects/api";
 import StudentPicker from "@/features/teams/components/StudentPicker";
-import { EvaluatorLine, LinkList, MemberList, PhaseStatus, PhaseWindows } from "@/features/teams/components/TeamBits";
+import { EvaluatorLine, LinkList, MemberList, PhaseStatus, PhaseWindows, ProjectPhaseBadge, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { cn, formatDate, formatDateTime } from "@/lib/utils";
 
 const invalidate = [projectsKey];
 
@@ -137,41 +138,123 @@ function InviteDialog({ teamId, open, onOpenChange }) {
   );
 }
 
-function Phases({ phases, teamId, canSubmit }) {
+/** One labelled row of the project's details: label on the left (stacked on phones), content on the right. */
+function DetailRow({ label, action, children }) {
+  return (
+    <section className="grid gap-2 border-t py-4 first:border-t-0 first:pt-0 md:grid-cols-[10rem_1fr] md:gap-6">
+      <div className="flex items-start justify-between gap-2 md:flex-col md:justify-start">
+        <h3 className="text-sm font-semibold">{label}</h3>
+        {action}
+      </div>
+      <div className="min-w-0 space-y-2">{children}</div>
+    </section>
+  );
+}
+
+/** The phase to open first: the one taking submissions, else the next upcoming one, else the last. */
+function startingPhase(phases) {
+  const open = phases.findIndex((p) => p.status === PS.OPEN);
+  if (open >= 0) return open;
+  const upcoming = phases.findIndex((p) => p.status === PS.UPCOMING);
+  return upcoming >= 0 ? upcoming : phases.length - 1;
+}
+
+function PhaseSlide({ phase: p, team, canSubmit, onSubmit }) {
+  const sub = p.submission;
+  return (
+    <div className="space-y-4 rounded-lg border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 space-y-1">
+          <p className="flex flex-wrap items-center gap-2 font-medium">
+            {p.name} <PhaseStatus status={p.status} /> {p.is_project_phase && <ProjectPhaseBadge />}
+          </p>
+          <p className="text-xs text-muted-foreground">Max {Number(p.max_marks)} marks</p>
+        </div>
+        {team && p.status === PS.OPEN && canSubmit && (
+          <Button size="sm" variant={sub ? "outline" : "default"} onClick={() => onSubmit(p)}>
+            <Send className="size-4" /> {sub ? "Edit submission" : p.is_project_phase ? "Submit project" : "Submit links"}
+          </Button>
+        )}
+      </div>
+
+      {p.short_description && <p className="text-sm">{p.short_description}</p>}
+      {p.is_project_phase && (
+        <p className="text-xs text-muted-foreground">In this phase your team sends its project title and description, and can set its team name. Links are optional.</p>
+      )}
+
+      <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[8rem_1fr]">
+        <dt className="font-medium text-muted-foreground">Timeline</dt>
+        <dd>
+          <PhaseWindows phase={p} showProgress={!!team} />
+        </dd>
+        {p.description && (
+          <>
+            <dt className="font-medium text-muted-foreground">Details</dt>
+            <dd className="whitespace-pre-wrap">{p.description}</dd>
+          </>
+        )}
+        {team && (
+          <>
+            <dt className="font-medium text-muted-foreground">Your submission</dt>
+            <dd className="space-y-2">
+              {sub ? (
+                <>
+                  <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <SubmissionState submission={sub} />
+                    {sub.submitted_at && `${formatDateTime(sub.submitted_at)}${sub.submitted_by ? ` by ${sub.submitted_by.name}` : ""}`}
+                  </p>
+                  {p.is_project_phase && <ProjectSummary team={team} />}
+                  {(!p.is_project_phase || sub.links?.length > 0) && <LinkList links={sub.links} />}
+                  {sub.notes && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Notes for the evaluator</p>
+                      <p className="whitespace-pre-wrap">{sub.notes}</p>
+                    </div>
+                  )}
+                </>
+              ) : p.status === PS.UPCOMING ? (
+                <p className="text-muted-foreground">Opens on {formatDate(p.start_date)}.</p>
+              ) : p.status === PS.OPEN ? (
+                <p className="text-muted-foreground">Nothing sent yet.</p>
+              ) : (
+                <p className="text-muted-foreground">Nothing was sent for this phase.</p>
+              )}
+            </dd>
+          </>
+        )}
+      </dl>
+    </div>
+  );
+}
+
+function Phases({ phases, team, canSubmit }) {
   const [editing, setEditing] = useState(null);
+  const [index, setIndex] = useState(() => startingPhase(phases));
   if (!phases.length) return <p className="text-sm text-muted-foreground">Your Admin hasn't added phases for this subject yet.</p>;
   return (
     <>
-      <ul className="divide-y rounded-md border">
-        {phases.map((p) => (
-          <li key={p.id} className="space-y-2 px-3 py-3">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                  {p.name} <PhaseStatus status={p.status} />
-                </p>
-                <p className="text-xs text-muted-foreground">Max {Number(p.max_marks)} marks</p>
-                {p.short_description && <p className="mt-1 text-xs">{p.short_description}</p>}
-              </div>
-            </div>
-            <PhaseWindows phase={p} showProgress={!!teamId} />
-            {p.description && (
-              <details className="text-sm">
-                <summary className="cursor-pointer text-xs text-muted-foreground">Details</summary>
-                <p className="mt-1 whitespace-pre-wrap">{p.description}</p>
-              </details>
-            )}
-            {p.submission?.links?.length > 0 && <LinkList links={p.submission.links} />}
-            {teamId && p.status === PS.OPEN && canSubmit && (
-              <Button size="sm" variant={p.submission ? "outline" : "default"} onClick={() => setEditing(p)}>
-                <Send className="size-4" /> {p.submission ? "Edit submission" : "Submit links"}
-              </Button>
-            )}
-            {teamId && p.status === PS.UPCOMING && <p className="text-xs text-muted-foreground">Opens on {formatDate(p.start_date)}.</p>}
-          </li>
-        ))}
-      </ul>
-      <SubmissionDialog teamId={teamId} phase={editing} onOpenChange={() => setEditing(null)} />
+      <Carousel
+        label="Phases"
+        size="sm"
+        items={phases}
+        index={index}
+        onIndexChange={setIndex}
+        itemKey={(p) => p.id}
+        tabLabel={(p, i) => (
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            <span className="tabular-nums text-muted-foreground">{i + 1}.</span> {p.name}
+            <span
+              className={cn(
+                "size-2 rounded-full",
+                p.status === PS.OPEN ? "bg-success" : p.status === PS.UPCOMING ? "bg-muted-foreground/40" : "bg-primary/60",
+              )}
+              aria-hidden
+            />
+          </span>
+        )}
+        renderItem={(p) => <PhaseSlide phase={p} team={team} canSubmit={canSubmit} onSubmit={setEditing} />}
+      />
+      <SubmissionDialog teamId={team?.id} team={team} phase={editing} onOpenChange={() => setEditing(null)} />
     </>
   );
 }
@@ -194,6 +277,7 @@ export default function SubjectCard({ item, settings, studentId }) {
 
   const mentor = team?.mentors?.[0];
   const pendingMentor = team?.mentors?.find((m) => m.status === MentorStatus.PENDING);
+  const projectPhase = phases.find((p) => p.is_project_phase);
 
   const confirmCopy = {
     remove: { title: `Remove ${confirm?.member?.name}?`, description: "They can join another team afterwards.", label: "Remove", run: () => remove.mutateAsync(confirm.member) },
@@ -209,20 +293,22 @@ export default function SubjectCard({ item, settings, studentId }) {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-1 border-b">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-base">
+          <div className="min-w-0">
+            <CardTitle className="text-lg">
               {o.subject.code} — {o.subject.name}
             </CardTitle>
-            <p className="text-xs text-muted-foreground">{team ? "Team Name: "+team.display_name : "You're not in a team yet"}</p>
+            <p className="text-sm text-muted-foreground">
+              Semester {o.semester.semester_number} · {team ? `Team: ${team.display_name}` : "You're not in a team yet"}
+            </p>
           </div>
           {team && <StatusBadge status={isLead ? TeamRole.LEAD : TeamRole.MEMBER} group="TeamRole" />}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="pt-6">
         {!team && (
-          <div className="space-y-3">
+          <DetailRow label="Team">
             {invites.map((i) => (
               <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
                 <span className="flex items-center gap-2">
@@ -249,25 +335,38 @@ export default function SubjectCard({ item, settings, studentId }) {
                 </AlertDescription>
               </Alert>
             )}
-          </div>
+          </DetailRow>
         )}
 
         {team && (
           <>
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold">
-                  Members ({team.members_count}/{settings.max_team_size})
-                </h3>
-                {isLead && canChange && team.members_count < settings.max_team_size && (
+            <DetailRow label="Project">
+              {team.project_title || team.project_description ? (
+                <ProjectSummary team={team} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {projectPhase
+                    ? `Your team sends its project title and description in ${projectPhase.name}${
+                        projectPhase.status === PS.UPCOMING ? ` (opens ${formatDate(projectPhase.start_date)})` : ""
+                      }.`
+                    : "Your team sends its project title and description in the first phase."}
+                </p>
+              )}
+            </DetailRow>
+
+            <DetailRow
+              label={`Members (${team.members_count}/${settings.max_team_size})`}
+              action={
+                isLead &&
+                canChange &&
+                team.members_count < settings.max_team_size && (
                   <Button size="sm" variant="outline" onClick={() => setDialog("invite")}>
                     <UserPlus className="size-4" /> Invite
                   </Button>
-                )}
-              </div>
-              {!team.is_complete && (
-                <p className="text-xs text-warning">A team needs at least {settings.min_team_size} members.</p>
-              )}
+                )
+              }
+            >
+              {!team.is_complete && <p className="text-xs text-warning">A team needs at least {settings.min_team_size} members.</p>}
               <MemberList
                 members={team.members}
                 actions={
@@ -288,14 +387,6 @@ export default function SubjectCard({ item, settings, studentId }) {
                     : undefined
                 }
               />
-              {isLead && (
-                <details>
-                  <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Invite history</summary>
-                  <div className="mt-2">
-                    <InviteHistory teamId={team.id} />
-                  </div>
-                </details>
-              )}
               {isLead && team.pending_invites.length > 0 && (
                 <ul className="space-y-1 text-sm">
                   {team.pending_invites.map((i) => (
@@ -308,10 +399,17 @@ export default function SubjectCard({ item, settings, studentId }) {
                   ))}
                 </ul>
               )}
-            </section>
+              {isLead && (
+                <details>
+                  <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Invite history</summary>
+                  <div className="mt-2">
+                    <InviteHistory teamId={team.id} />
+                  </div>
+                </details>
+              )}
+            </DetailRow>
 
-            <section className="space-y-2">
-              <h3 className="text-sm font-semibold">Mentor</h3>
+            <DetailRow label="Mentor">
               {mentor ? (
                 <p className="flex flex-wrap items-center gap-2 text-sm">
                   {mentor.faculty.name} <StatusBadge status={mentor.status} group="MentorStatus" />
@@ -330,28 +428,26 @@ export default function SubjectCard({ item, settings, studentId }) {
               )}
               {isLead && !mentor && !team.is_complete && <p className="text-xs text-muted-foreground">Complete your team first.</p>}
               {isLead && (
-                <details className="pt-1">
+                <details>
                   <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Request history</summary>
                   <div className="mt-2">
                     <MentorRequestHistory teamId={team.id} />
                   </div>
                 </details>
               )}
-            </section>
+            </DetailRow>
 
-            <section className="space-y-1">
-              <h3 className="text-sm font-semibold">Evaluator</h3>
+            <DetailRow label="Evaluator">
               <p className="text-sm">
                 <EvaluatorLine evaluators={team.evaluators} />
               </p>
-            </section>
+            </DetailRow>
           </>
         )}
 
-        <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Phases</h3>
-          <Phases phases={phases} teamId={team?.id} canSubmit={!!team} />
-        </section>
+        <DetailRow label={`Phases (${phases.length})`}>
+          <Phases phases={phases} team={team} canSubmit={!!team} />
+        </DetailRow>
 
         {team && canChange && (
           <div className="border-t pt-4">

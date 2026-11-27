@@ -79,7 +79,7 @@ def phase_rows(team, semester_subject_id):
             )
         )
     rows = []
-    for phase in phases_of(semester_subject_id):
+    for index, phase in enumerate(phases_of(semester_subject_id)):
         sub = submissions.get(phase.id)
         rows.append(
             {
@@ -88,6 +88,7 @@ def phase_rows(team, semester_subject_id):
                 "short_description": phase.short_description,
                 "description": phase.description,
                 "order": phase.order,
+                "is_project_phase": index == 0,
                 "start_date": phase.start_date,
                 "end_date": phase.end_date,
                 "max_marks": phase.max_marks,
@@ -339,13 +340,16 @@ class MyTeamViewSet(StudentMixin, mixins.ListModelMixin, mixins.RetrieveModelMix
         serializer = SubmissionWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        project = {k: data[k] for k in ("project_title", "project_description", "team_name") if k in data}
         sub, old = project_services.save_submission(
-            team, phase, self.student, links=data["links"], notes=data.get("notes"), submit=data["submit"]
+            team, phase, self.student, links=data["links"], notes=data.get("notes"), submit=data["submit"],
+            project=project,
         )
-        audit.record(
-            request, "submission.submit" if data["submit"] else "submission.save_draft", sub,
-            old=old, new={"status": sub.status, "links": [link["url"] for link in data["links"]]},
-        )
+        new = {"status": sub.status, "links": [link["url"] for link in data["links"]]}
+        if "project_title" in old:
+            team.refresh_from_db(fields=["name", "project_title", "project_description"])
+            new.update(project_title=team.project_title, project_description=team.project_description, team_name=team.name)
+        audit.record(request, "submission.submit" if data["submit"] else "submission.save_draft", sub, old=old, new=new)
         sub = PhaseSubmission.objects.prefetch_related("links").get(pk=sub.pk)
         return Response(SubmissionSerializer(sub).data)
 

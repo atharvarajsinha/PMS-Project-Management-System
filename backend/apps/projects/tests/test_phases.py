@@ -50,7 +50,7 @@ class PhaseAdminTests(Phase2Fixture):
     def test_validation(self):
         self.assertError(self.post(5, 5), 400, "VALIDATION_ERROR")  # end must be after start
         self.assertError(self.post(0, 5, evaluation_end_date=str(day(4))), 400, "VALIDATION_ERROR")
-        self.assertError(self.post(0, 5, max_marks="0"), 400, "VALIDATION_ERROR")
+        self.assertError(self.post(0, 5, max_marks="-1"), 400, "VALIDATION_ERROR")
         self.post(0, 5)
         self.assertError(self.post(10, 12), 400, "VALIDATION_ERROR")  # duplicate name
 
@@ -60,7 +60,8 @@ class PhaseAdminTests(Phase2Fixture):
         closed = self.make_phase(start=-20, end=-10, name="Old")
         r = self.api.post(f"/api/v1/phases/{closed.id}/lock/")
         self.assertEqual(r.json()["status"], "LOCKED")
-        self.assertError(self.api.patch(f"/api/v1/phases/{closed.id}/", {"name": "New"}, format="json"), 409, "CONFLICT")
+        # The Admin may still edit a locked phase (override)
+        self.assertEqual(self.api.patch(f"/api/v1/phases/{closed.id}/", {"name": "New"}, format="json").status_code, 200)
         self.assertEqual(self.api.post(f"/api/v1/phases/{closed.id}/unlock/").json()["status"], "CLOSED")
 
     def test_reorder(self):
@@ -119,9 +120,12 @@ class SubmissionTests(Phase2Fixture):
 
     def put(self, student, phase, **body):
         body.setdefault("links", [{"link_type": "REPOSITORY", "url": "https://github.com/x/y"}])
+        body.setdefault("project_title", "Campus maps")
+        body.setdefault("project_description", "Indoor maps for the campus.")
         return self.as_student(student).put(f"/api/v1/my/teams/{self.team_id}/phases/{phase.id}/submission/", body, format="json")
 
     def test_any_member_submits_while_open(self):
+        self.make_phase(start=-20, end=-10)  # phase 1 (project phase) is over
         phase = self.make_phase(start=-1, end=1)
         r = self.put(self.b1, phase)
         self.assertEqual(r.status_code, 200, r.content)
@@ -129,6 +133,43 @@ class SubmissionTests(Phase2Fixture):
         r = self.put(self.a1, phase, links=[], submit=False)  # back to draft, links replaced
         self.assertEqual((r.json()["status"], r.json()["links"]), ("DRAFT", []))
         self.assertError(self.put(self.a1, phase, links=[]), 400, "VALIDATION_ERROR")  # submit needs a link
+
+    def test_project_phase_needs_title_and_description_not_links(self):
+        from apps.teams.models import Team
+
+        phase = self.make_phase(start=-1, end=1)
+        self.assertTrue(phase.is_project_phase)
+        r = self.put(self.a1, phase, links=[], project_title="", project_description="")
+        self.assertError(r, 400, "VALIDATION_ERROR")
+        self.assertEqual(set(r.json()["error"]["details"]), {"project_title", "project_description"})
+        # A draft may be incomplete
+        self.assertEqual(self.put(self.a1, phase, links=[], project_description="", submit=False).status_code, 200)
+        r = self.put(self.b1, phase, links=[], team_name="Mappers")
+        self.assertEqual((r.status_code, r.json()["status"]), (200, "SUBMITTED"), r.content)
+        team = Team.objects.get(pk=self.team_id)
+        self.assertEqual(
+            (team.name, team.project_title, team.project_description),
+            ("Mappers", "Campus maps", "Indoor maps for the campus."),
+        )
+        # The overview shows the project and marks phase 1 as the project phase
+        daa = next(s for s in self.as_student(self.a1).get("/api/v1/my/projects/").json()["subjects"] if s["semester_subject"]["id"] == self.daa.id)
+        self.assertEqual(daa["team"]["project_title"], "Campus maps")
+        self.assertTrue(daa["phases"][0]["is_project_phase"])
+
+    def test_project_phase_team_name_must_be_unique(self):
+        phase = self.make_phase(start=-1, end=1)
+        from apps.teams.models import Team
+
+        other = self.create_team(self.a2)
+
+        Team.objects.filter(pk=other).update(name="Mappers")
+        r = self.put(self.a1, phase, team_name="mappers")
+        self.assertError(r, 400, "VALIDATION_ERROR")
+        self.assertIn("team_name", r.json()["error"]["details"])
+
+    def test_max_marks_may_be_zero(self):
+        phase = self.make_phase(start=-1, end=1, max_marks="0")
+        self.assertEqual(phase.max_marks, 0)
 
     def test_closed_and_upcoming_rejected(self):
         self.assertError(self.put(self.a1, self.make_phase(start=-10, end=-1)), 409, "CONFLICT")

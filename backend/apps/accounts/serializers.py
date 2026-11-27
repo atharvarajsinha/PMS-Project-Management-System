@@ -180,10 +180,14 @@ class _PersonSerializer(serializers.ModelSerializer):
 class FacultySerializer(_PersonSerializer):
     class_teacher_of = serializers.SerializerMethodField()
     teaching_count = serializers.IntegerField(read_only=True, default=0)
+    # Distinct teams this faculty member evaluates in at least one phase
+    evaluation_teams_count = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Faculty
-        fields = _PersonSerializer.PERSON_FIELDS + ["class_teacher_of", "teaching_count", "created_at", "updated_at"]
+        fields = _PersonSerializer.PERSON_FIELDS + [
+            "class_teacher_of", "teaching_count", "evaluation_teams_count", "created_at", "updated_at",
+        ]
 
     def get_class_teacher_of(self, faculty) -> list[dict]:
         return [

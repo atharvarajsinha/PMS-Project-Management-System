@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorState from "@/components/common/ErrorState";
 import StatusBadge from "@/components/common/StatusBadge";
-import { EvaluatorSource, PhaseStatus as PS, TeamRole } from "@/config/choices";
+import { EvaluatorSource, TeamRole } from "@/config/choices";
 import { listSemesterMentors } from "@/features/mentors/api";
 import StudentPicker from "@/features/teams/components/StudentPicker";
 import { MemberList, offeringLabel, PhaseStatus } from "@/features/teams/components/TeamBits";
@@ -24,9 +25,9 @@ import {
   listUnassignedStudents,
   removeMentor,
   removeTeamMember,
-  renameTeam,
   setEvaluator,
   teamsInvalidate,
+  updateTeam,
 } from "@/features/teams/api";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useFacultyOptions } from "@/hooks/useLookups";
@@ -45,21 +46,39 @@ function Section({ title, description, children }) {
   );
 }
 
+/** Admin override: team name and the project title/description the team sent in phase 1. */
 function RenameForm({ team }) {
-  const [name, setName] = useState(team.name);
-  useEffect(() => setName(team.name), [team.name]);
-  const mutation = useApiMutation(() => renameTeam(team.id, name), { invalidate: teamsInvalidate, success: "Team name saved" });
+  const initial = { name: team.name, project_title: team.project_title || "", project_description: team.project_description || "" };
+  const [values, setValues] = useState(initial);
+  useEffect(
+    () => setValues({ name: team.name, project_title: team.project_title || "", project_description: team.project_description || "" }),
+    [team.name, team.project_title, team.project_description],
+  );
+  const changed = Object.keys(initial).some((k) => values[k] !== initial[k]);
+  const mutation = useApiMutation(() => updateTeam(team.id, values), { invalidate: teamsInvalidate, success: "Team details saved" });
+  const set = (key) => (e) => setValues((v) => ({ ...v, [key]: e.target.value }));
   return (
     <form
-      className="flex gap-2"
+      className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
         mutation.mutate();
       }}
     >
-      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={`Team #${team.id}`} aria-label="Team name" maxLength={100} />
-      <Button type="submit" variant="outline" disabled={mutation.isPending || name === team.name}>
-        Save
+      <div className="space-y-1.5">
+        <Label htmlFor="team-edit-name">Team name</Label>
+        <Input id="team-edit-name" value={values.name} onChange={set("name")} placeholder={`Team #${team.id}`} maxLength={100} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="team-edit-title">Project title</Label>
+        <Input id="team-edit-title" value={values.project_title} onChange={set("project_title")} maxLength={200} placeholder="Not sent yet" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="team-edit-description">Project description</Label>
+        <Textarea id="team-edit-description" rows={3} value={values.project_description} onChange={set("project_description")} maxLength={5000} />
+      </div>
+      <Button type="submit" variant="outline" size="sm" disabled={mutation.isPending || !changed}>
+        {mutation.isPending && <Loader2 className="size-4 animate-spin" />} Save
       </Button>
     </form>
   );
@@ -153,7 +172,7 @@ function EvaluatorSection({ team }) {
               <Select
                 value={idStr(e.evaluator?.id) || "__none"}
                 onValueChange={(v) => set.mutate({ phaseId: e.phase.id, facultyId: v === "__none" ? null : apiId(v) })}
-                disabled={e.phase.status === PS.LOCKED || set.isPending}
+                disabled={set.isPending}
               >
                 <SelectTrigger className={e.evaluator ? "h-9" : "h-9 border-warning/40 text-warning"} aria-label={`Evaluator for ${e.phase.name}`}>
                   <SelectValue />
@@ -174,7 +193,7 @@ function EvaluatorSection({ team }) {
                   size="sm"
                   variant="ghost"
                   onClick={() => set.mutate({ phaseId: e.phase.id, facultyId: null })}
-                  disabled={e.phase.status === PS.LOCKED || set.isPending}
+                  disabled={set.isPending}
                   title="Back to automatic"
                 >
                   <RotateCcw className="size-4" /> Auto
@@ -213,7 +232,7 @@ export default function TeamDetailSheet({ teamId, onOpenChange }) {
         {query.isLoading && <Skeleton className="h-60 w-full" />}
         {team && (
           <div className="space-y-8">
-            <Section title="Name" description="Usually set by the team's evaluator.">
+            <Section title="Name and project" description="Sent by the team in phase 1 (the evaluator can also rename it). As Admin you can change these at any time.">
               <RenameForm team={team} />
             </Section>
 

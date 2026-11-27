@@ -31,6 +31,7 @@ from .serializers import (
     StudentBriefSerializer,
     StudentIdSerializer,
     TeamCreateSerializer,
+    TeamEditSerializer,
     TeamNameSerializer,
     TeamSerializer,
     phases_of,
@@ -128,8 +129,7 @@ class SemesterMentorViewSet(
         serializer = SemesterMentorUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         capacity = serializer.validated_data["capacity"]
-        if capacity < slot.load:
-            raise Conflict(f"{slot.faculty.user.name} already has {slot.load} teams this semester; capacity can't be lower.")
+        # Admin override: capacity may go below the current load (existing teams stay; no new ones)
         old = {"capacity": slot.capacity}
         slot.capacity = capacity
         slot.save(update_fields=["capacity", "updated_at"])
@@ -234,15 +234,24 @@ class TeamViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
         audit.record(request, "team.create", team, new=team_snapshot(team))
         return self._respond(team, status.HTTP_201_CREATED)
 
-    @extend_schema(request=TeamNameSerializer, responses={200: TeamSerializer})
+    @extend_schema(request=TeamEditSerializer, responses={200: TeamSerializer})
     def partial_update(self, request, pk=None):
-        """Only the name can be edited here; use the actions for members, lead, mentors and evaluators."""
+        """Name and project title/description (an Admin override at any time); use the actions for
+        members, lead, mentors and evaluators."""
         team = self._team()
-        serializer = TeamNameSerializer(data=request.data)
+        serializer = TeamEditSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        old = {"name": team.name}
-        services.rename(team, serializer.validated_data["name"], request.user)
-        audit.record(request, "team.rename", team, old=old, new={"name": team.name})
+        data = serializer.validated_data
+        old = {"name": team.name, "project_title": team.project_title, "project_description": team.project_description}
+        if "name" in data:
+            services.rename(team, data["name"], request.user)
+        project = {k: data[k].strip() for k in ("project_title", "project_description") if k in data}
+        if project:
+            for field, value in project.items():
+                setattr(team, field, value)
+            team.save(update_fields=[*project, "updated_at"])
+        new = {"name": team.name, "project_title": team.project_title, "project_description": team.project_description}
+        audit.record(request, "team.update", team, old=old, new=new)
         return self._respond(team)
 
     def perform_destroy(self, instance):

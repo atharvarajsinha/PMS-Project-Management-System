@@ -5,6 +5,7 @@ export const listTeams = (params) => get("/teams/", params);
 export const getTeam = (id) => get(`/teams/${id}/`);
 export const createTeam = (body) => post("/teams/", body);
 export const renameTeam = (id, name) => patch(`/teams/${id}/`, { name });
+export const updateTeam = (id, body) => patch(`/teams/${id}/`, body);
 export const deleteTeam = (id) => del(`/teams/${id}/`);
 export const bulkDeleteTeams = (ids) => post("/teams/bulk-delete/", { ids });
 export const addTeamMember = (id, studentId) => post(`/teams/${id}/add-member/`, { student_id: studentId });

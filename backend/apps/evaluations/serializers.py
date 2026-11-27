@@ -100,6 +100,8 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "id": team.id,
             "name": team.name,
             "display_name": team.display_name,
+            "project_title": team.project_title,
+            "project_description": team.project_description,
             "lead_id": team.lead_id,
             "members": [StudentBriefSerializer(m.student).data for m in team.members.all()],
         }

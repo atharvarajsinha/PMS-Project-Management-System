@@ -126,6 +126,9 @@ class Command(BaseCommand):
         if not Team.objects.filter(semester_subject=o_daa, lead=asha).exists():
             team = team_services.create_team(o_daa, asha, admin, members=[bina], admin=True)
             MentorAssignment.objects.create(team=team, faculty=x, requested_by=asha.user)
+            team.project_title = "Campus shortest paths"
+            team.project_description = "Route planner for the campus that compares Dijkstra, A* and BFS on real walking data."
+            team.save(update_fields=["project_title", "project_description", "updated_at"])
             proposal = Phase.objects.get(semester_subject=o_daa, name="Proposal")
             sub = PhaseSubmission.objects.create(
                 team=team, phase=proposal, status=PhaseSubmission.Status.SUBMITTED, submitted_by=asha,

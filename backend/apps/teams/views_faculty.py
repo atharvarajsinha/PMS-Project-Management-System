@@ -275,3 +275,88 @@ class ClassStudentProjectView(FacultyMixin, APIView):
                 }
             )
         return Response({"student": {**StudentBriefSerializer(student).data, "status": student.user.status}, "subjects": subjects})
+
+
+@extend_schema(tags=["faculty-portal"], responses={200: dict})
+class ClassSectionMarksView(FacultyMixin, APIView):
+    """GET /my/class-sections/{section_pk}/marks/ — class teacher: every student's marks, per subject
+    and phase (one column per phase). `status` is the evaluation's status (DRAFT marks may still change)."""
+
+    def get(self, request, section_pk):
+        from apps.evaluations.models import StudentMark
+        from apps.projects.models import Phase
+
+        section = get_object_or_404(
+            Section.objects.select_related("semester"), pk=section_pk, class_teacher__user=request.user
+        )
+        offerings = list(
+            SemesterSubject.objects.filter(section_subjects__section=section)
+            .select_related("semester", "subject")
+            .order_by("subject__code")
+        )
+        students = list(
+            Student.objects.filter(section=section).select_related("user", "section").order_by("roll_number")
+        )
+        phases = {}
+        for phase in Phase.objects.filter(semester_subject__in=offerings).order_by("order", "start_date", "id"):
+            phases.setdefault(phase.semester_subject_id, []).append(phase)
+        memberships = dict(
+            ((s, o), (t, name))
+            for s, o, t, name in TeamMember.objects.filter(student__in=students, semester_subject__in=offerings).values_list(
+                "student_id", "semester_subject_id", "team_id", "team__name"
+            )
+        )
+        marks = {
+            (m["student_id"], m["evaluation__assignment__phase_id"]): m
+            for m in StudentMark.objects.filter(
+                student__in=students, evaluation__assignment__phase__semester_subject__in=offerings
+            ).values("student_id", "evaluation__assignment__phase_id", "marks", "evaluation__status")
+        }
+
+        subjects = []
+        for offering in offerings:
+            rows = phases.get(offering.id, [])
+            subjects.append(
+                {
+                    "semester_subject": OfferingBriefSerializer(offering).data,
+                    "phases": [
+                        {
+                            "id": p.id,
+                            "name": p.name,
+                            "order": p.order,
+                            "max_marks": f"{p.max_marks:.2f}",
+                            "status": p.effective_status(),
+                            "is_project_phase": i == 0,
+                        }
+                        for i, p in enumerate(rows)
+                    ],
+                    "total_max_marks": f"{sum((p.max_marks for p in rows), 0):.2f}",
+                }
+            )
+
+        def student_row(student):
+            cells = {}
+            for offering in offerings:
+                team = memberships.get((student.id, offering.id))
+                given = {}
+                total = None
+                for p in phases.get(offering.id, []):
+                    m = marks.get((student.id, p.id))
+                    if m is None:
+                        continue
+                    given[str(p.id)] = {"marks": f"{m['marks']:.2f}", "status": m["evaluation__status"]}
+                    total = (total or 0) + m["marks"]
+                cells[str(offering.id)] = {
+                    "team": {"id": team[0], "display_name": team[1] or f"Team #{team[0]}"} if team else None,
+                    "marks": given,
+                    "total": f"{total:.2f}" if total is not None else None,
+                }
+            return {"student": {**StudentBriefSerializer(student).data, "status": student.user.status}, "subjects": cells}
+
+        return Response(
+            {
+                "section": {"id": section.id, "name": section.name, "semester_number": section.semester.semester_number},
+                "subjects": subjects,
+                "students": [student_row(s) for s in students],
+            }
+        )

@@ -85,9 +85,7 @@ class PhaseViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
         return self._respond(phase, status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        phase = self.get_object()
-        if phase.locked_at:
-            raise Conflict("This phase is locked. Unlock it to make changes.")
+        phase = self.get_object()  # Admin / Super Admin: editing a locked phase is allowed (override)
         serializer = self.get_serializer(phase, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         old = audit.snapshot(phase, AUDIT_FIELDS)

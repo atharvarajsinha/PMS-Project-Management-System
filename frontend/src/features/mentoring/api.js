@@ -10,3 +10,4 @@ export const rejectMentoring = (id, note) => post(`/my/mentoring/${id}/reject/`,
 // Class teacher: where my section's students stand
 export const getClassSectionTeams = (sectionId) => get(`/my/class-sections/${sectionId}/teams/`);
 export const getClassStudentProject = (sectionId, studentId) => get(`/my/class-sections/${sectionId}/teams/${studentId}/`);
+export const getClassSectionMarks = (sectionId) => get(`/my/class-sections/${sectionId}/marks/`);

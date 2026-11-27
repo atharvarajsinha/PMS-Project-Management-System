@@ -43,6 +43,9 @@ class Team(BaseModel):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     name_set_at = models.DateTimeField(null=True, blank=True)
+    # Submitted by the team in the subject's first phase (the project phase)
+    project_title = models.CharField(max_length=200, blank=True)
+    project_description = models.TextField(blank=True)
     # RESTRICT: a Team Lead can't be deleted while leading (change the lead first);
     # deleting the whole offering / college still removes the team.
     lead = models.ForeignKey("accounts.Student", on_delete=models.RESTRICT, related_name="led_teams")

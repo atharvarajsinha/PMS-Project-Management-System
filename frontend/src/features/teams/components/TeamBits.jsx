@@ -113,3 +113,29 @@ export function LinkList({ links, className }) {
 }
 
 export const isSubmitted = (s) => s?.status === SubmissionStatus.SUBMITTED;
+
+/** Marks the subject's first phase, where teams submit their project title and description. */
+export function ProjectPhaseBadge({ className }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center whitespace-nowrap rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary",
+        className,
+      )}
+    >
+      Project phase
+    </span>
+  );
+}
+
+/** The team's project title and description (from the project phase), or a hint when not sent yet. */
+export function ProjectSummary({ team, className }) {
+  if (!team?.project_title && !team?.project_description)
+    return <p className={cn("text-sm text-muted-foreground", className)}>The team hasn't sent its project title yet.</p>;
+  return (
+    <div className={cn("space-y-1", className)}>
+      <p className="font-medium">{team.project_title || "Untitled project"}</p>
+      {team.project_description && <p className="whitespace-pre-wrap text-sm text-muted-foreground">{team.project_description}</p>}
+    </div>
+  );
+}

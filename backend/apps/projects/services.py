@@ -106,21 +106,46 @@ def sync_statuses(today=None):
 
 
 @transaction.atomic
-def save_submission(team, phase, student, *, links, notes, submit):
-    """Replace the team's links for the phase. Only while the phase is OPEN (dates checked directly)."""
+def save_submission(team, phase, student, *, links, notes, submit, project=None):
+    """Replace the team's links for the phase. Only while the phase is OPEN (dates checked directly).
+
+    In the project phase (the subject's first phase) the team also sends its project title and
+    description (both required to submit; links optional) and may change its team name.
+    `project` = {"project_title", "project_description", "team_name"}, each optional.
+    """
     if not phase.accepts_submissions():
         status = phase.effective_status()
         if status == Phase.Status.UPCOMING:
             raise Conflict(f"{phase.name} opens on {phase.start_date:%d %b %Y}.")
         raise Conflict(f"Submissions for {phase.name} closed on {phase.end_date:%d %b %Y}.")
-    if submit and not links:
+    project = project or {}
+    old = {}
+    if phase.is_project_phase:
+        from apps.teams import services as team_services
+
+        title = project.get("project_title", team.project_title).strip()
+        description = project.get("project_description", team.project_description).strip()
+        if submit:
+            errors = {}
+            if not title:
+                errors["project_title"] = ["Enter your project title."]
+            if not description:
+                errors["project_description"] = ["Describe your project."]
+            if errors:
+                raise InvalidInput(details=errors)
+        old.update(project_title=team.project_title, project_description=team.project_description, team_name=team.name)
+        if "team_name" in project and project["team_name"].strip() != team.name:
+            try:
+                team_services.rename(team, project["team_name"], student.user)
+            except InvalidInput as exc:
+                raise InvalidInput(details={"team_name": (exc.details or {}).get("name", ["Choose another name."])}) from exc
+        team.project_title, team.project_description = title, description
+        team.save(update_fields=["project_title", "project_description", "updated_at"])
+    elif submit and not links:
         raise InvalidInput(details={"links": ["Add at least one link before submitting."]})
 
     submission, _ = PhaseSubmission.objects.select_for_update().get_or_create(team=team, phase=phase)
-    old = {
-        "status": submission.status,
-        "links": list(submission.links.values_list("url", flat=True)),
-    }
+    old.update(status=submission.status, links=list(submission.links.values_list("url", flat=True)))
     submission.links.all().delete()
     SubmissionLink.objects.bulk_create(
         SubmissionLink(submission=submission, link_type=link["link_type"], url=link["url"], title=link.get("title", ""))

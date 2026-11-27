@@ -48,7 +48,7 @@ class AssignmentFilter(django_filters.FilterSet):
 class AssignmentListMixin:
     serializer_class = AssignmentSerializer
     filterset_class = AssignmentFilter
-    search_fields = ["team__name", "team__members__student__user__name", "team__members__student__roll_number"]
+    search_fields = ["team__name", "team__project_title", "team__members__student__user__name", "team__members__student__roll_number"]
     ordering_aliases = {"phase": "phase__order", "team": "team_id"}
     ordering = ["phase__semester_subject__subject__code", "phase__order", "phase__start_date", "team_id"]
 
@@ -115,6 +115,7 @@ class MyEvaluationViewSet(AssignmentListMixin, CollegeScopedMixin, mixins.ListMo
                         "order": r["phase__order"],
                         "start_date": r["phase__start_date"],
                         "end_date": r["phase__end_date"],
+                        "evaluation_end_date": phases[r["phase_id"]].evaluation_end_date,
                         "status": phases[r["phase_id"]].effective_status(),
                         "max_marks": phases[r["phase_id"]].max_marks,
                     },

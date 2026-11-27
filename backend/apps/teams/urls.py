@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import SimpleRouter
 
 from .views import SemesterMentorViewSet, TeamViewSet
-from .views_faculty import ClassSectionTeamsView, ClassStudentProjectView, MyMentoringViewSet
+from .views_faculty import ClassSectionMarksView, ClassSectionTeamsView, ClassStudentProjectView, MyMentoringViewSet
 from .views_student import MyInviteViewSet, MyProjectsView, MyTeamViewSet
 
 router = SimpleRouter()
@@ -18,6 +18,7 @@ router.register("my/mentoring", MyMentoringViewSet, basename="my-mentoring")
 urlpatterns = [
     path("my/projects/", MyProjectsView.as_view(), name="my-projects"),
     path("my/class-sections/<int:section_pk>/teams/", ClassSectionTeamsView.as_view(), name="my-class-section-teams"),
+    path("my/class-sections/<int:section_pk>/marks/", ClassSectionMarksView.as_view(), name="my-class-section-marks"),
     path(
         "my/class-sections/<int:section_pk>/teams/<int:student_pk>/",
         ClassStudentProjectView.as_view(),

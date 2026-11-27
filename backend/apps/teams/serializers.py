@@ -96,9 +96,15 @@ class PhaseBriefSerializer(serializers.Serializer):
     end_date = serializers.DateField()
     evaluation_end_date = serializers.DateField(allow_null=True)
     status = serializers.SerializerMethodField()
+    is_project_phase = serializers.SerializerMethodField()
 
     def get_status(self, phase) -> str:
         return phase.effective_status()
+
+    def get_is_project_phase(self, phase) -> bool:
+        from apps.projects.serializers import first_phase_id
+
+        return first_phase_id(self.context, phase.semester_subject_id) == phase.pk
 
 
 class MentorAssignmentBriefSerializer(serializers.ModelSerializer):
@@ -146,7 +152,8 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = [
-            "id", "name", "display_name", "semester_subject", "lead", "members", "members_count", "is_complete",
+            "id", "name", "display_name", "project_title", "project_description", "semester_subject", "lead",
+            "members", "members_count", "is_complete",
             "mentors", "evaluators", "evaluator_pending", "pending_invites", "name_set_at", "created_at",
         ]
 
@@ -204,6 +211,14 @@ class InviteIdSerializer(serializers.Serializer):
 
 class TeamNameSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100, allow_blank=True)
+
+
+class TeamEditSerializer(serializers.Serializer):
+    """Admin: any of the team's name, project title and project description."""
+
+    name = serializers.CharField(max_length=100, allow_blank=True, required=False)
+    project_title = serializers.CharField(max_length=200, allow_blank=True, required=False)
+    project_description = serializers.CharField(max_length=5000, allow_blank=True, required=False)
 
 
 class MentorAssignSerializer(serializers.Serializer):

@@ -135,7 +135,10 @@ class FacultyViewSet(PersonViewSet):
             .prefetch_related(
                 Prefetch("class_teacher_sections", queryset=Section.objects.select_related("semester"))
             )
-            .annotate(teaching_count=Count("section_subjects", distinct=True))
+            .annotate(
+                teaching_count=Count("section_subjects", distinct=True),
+                evaluation_teams_count=Count("evaluator_assignments__team", distinct=True),
+            )
         )
 
     def get_serializer_class(self):

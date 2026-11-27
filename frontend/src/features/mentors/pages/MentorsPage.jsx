@@ -123,7 +123,7 @@ function CapacityDialog({ slot, onOpenChange }) {
       >
         <div className="space-y-2">
           <Label htmlFor="cap">Maximum teams</Label>
-          <Input id="cap" type="number" min={Math.max(1, slot?.load ?? 1)} max={100} value={value} onChange={(e) => setValue(e.target.value)} className="w-32" />
+          <Input id="cap" type="number" min={1} max={100} value={value} onChange={(e) => setValue(e.target.value)} className="w-32" />
         </div>
         <FormActions onCancel={() => onOpenChange(false)} submitLabel="Save" pending={mutation.isPending} />
       </form>

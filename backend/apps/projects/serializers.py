@@ -41,9 +41,21 @@ class LinkInputSerializer(serializers.Serializer):
 
 
 class SubmissionWriteSerializer(serializers.Serializer):
-    links = LinkInputSerializer(many=True, max_length=20)
+    links = LinkInputSerializer(many=True, max_length=20, required=False, default=list)
     notes = serializers.CharField(required=False, allow_blank=True, max_length=5000)
     submit = serializers.BooleanField(default=True)
+    # Project phase (the subject's first phase) only; ignored for other phases
+    project_title = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    project_description = serializers.CharField(required=False, allow_blank=True, max_length=5000)
+    team_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+
+
+def first_phase_id(context, semester_subject_id):
+    """Id of the subject's first phase, cached in the serializer context for list pages."""
+    cache = context.setdefault("_first_phase_ids", {}) if isinstance(context, dict) else {}
+    if semester_subject_id not in cache:
+        cache[semester_subject_id] = Phase.first_phase_ids([semester_subject_id]).get(semester_subject_id)
+    return cache[semester_subject_id]
 
 
 def college_offerings(college):
@@ -55,15 +67,16 @@ class PhaseSerializer(serializers.ModelSerializer):
     semester_subject = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     locked_by = UserBriefSerializer(read_only=True, allow_null=True)
-    max_marks = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=Decimal("0.01"))
+    max_marks = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=Decimal("0"))
     order = serializers.IntegerField(read_only=True)
+    is_project_phase = serializers.SerializerMethodField()
     stats = serializers.SerializerMethodField()
 
     class Meta:
         model = Phase
         fields = [
             "id", "semester_subject_id", "semester_subject", "name", "short_description", "description",
-            "start_date", "end_date", "evaluation_end_date", "max_marks", "order", "status",
+            "start_date", "end_date", "evaluation_end_date", "max_marks", "order", "is_project_phase", "status",
             "locked_at", "locked_by", "unlocked_at", "stats", "created_at", "updated_at",
         ]
         read_only_fields = ["locked_at", "unlocked_at"]
@@ -78,6 +91,9 @@ class PhaseSerializer(serializers.ModelSerializer):
 
     def get_status(self, phase) -> str:
         return phase.effective_status()
+
+    def get_is_project_phase(self, phase) -> bool:
+        return first_phase_id(self.context, phase.semester_subject_id) == phase.pk
 
     def get_stats(self, phase) -> dict | None:
         keys = ("teams_count", "submitted_count", "evaluated_count", "evaluator_pending_count")

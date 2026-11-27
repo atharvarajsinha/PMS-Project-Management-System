@@ -109,8 +109,6 @@ def override_evaluator(team, faculty, phases, by_user, settings):
     changed = []
     rows = EvaluatorAssignment.objects.select_for_update().filter(team=team, phase__in=phases).select_related("phase")
     for assignment in rows:
-        if assignment.phase.locked_at:
-            raise Conflict(f"{assignment.phase.name} is locked. Unlock it before changing its evaluator.")
         old = {"evaluator": assignment.evaluator_id, "source": assignment.source}
         if faculty is None:
             assignment.evaluator_id, assignment.source = default_id, AUTO
@@ -143,23 +141,26 @@ def marks_snapshot(evaluation):
 
 @transaction.atomic
 def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=None, submit, by_user, as_faculty=None, correction=False):
-    """Evaluator enters marks (as_faculty), or the Admin corrects existing marks (correction=True).
+    """Evaluator enters marks (as_faculty), or the Admin overrides them (correction=True).
 
     Marks are per student. `default_marks` ("same for everyone") applies to every member that
     `student_marks` ({student_id: marks}) doesn't override; every member must end up with a mark.
-    - Only while the phase is CLOSED (past end date, not locked).
-    - Each mark is 0..phase max. No submitted work → every mark must be 0.
+    - Evaluator: only while the phase is CLOSED (past end date, not locked); no submitted work →
+      every mark must be 0.
+    - Admin / Super Admin (correction=True): at any time, locked or not, whether or not the
+      evaluator has entered marks, and with or without a submission.
+    - Each mark is 0..phase max.
+    - Phase with 0 max marks: `submit` is the "Evaluated" checkbox; submit=False un-marks it.
     """
     phase = assignment.phase
-    status = phase.effective_status()
-    if status == phase.Status.LOCKED:
-        raise Conflict("This phase is locked. Marks can't be changed until the Admin unlocks it.")
-    if status != phase.Status.CLOSED:
-        raise Conflict("Marks can be entered only after the phase's end date.")
+    if not correction:
+        status = phase.effective_status()
+        if status == phase.Status.LOCKED:
+            raise Conflict("This phase is locked. Marks can't be changed until the Admin unlocks it.")
+        if status != phase.Status.CLOSED:
+            raise Conflict("Marks can be entered only after the phase's end date.")
 
     evaluation = Evaluation.objects.select_for_update().filter(assignment=assignment).first()
-    if correction and evaluation is None:
-        raise Conflict("The evaluator hasn't entered marks for this team yet.")
 
     members = list(
         assignment.team.members.select_related("student__user").order_by("student__roll_number").values_list(
@@ -188,7 +189,7 @@ def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=No
 
     submission = current_submission(assignment)
     submitted = submission is not None and submission.is_submitted
-    if not submitted and any(v != 0 for v in final.values()):
+    if not submitted and not correction and any(v != 0 for v in final.values()):
         raise InvalidInput(details={"student_marks": ["This team did not submit anything for this phase, so every mark must be 0."]})
 
     old = None
@@ -207,6 +208,10 @@ def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=No
     if submit and evaluation.status != Evaluation.Status.SUBMITTED:
         evaluation.status = Evaluation.Status.SUBMITTED
         evaluation.submitted_at = timezone.now()
+    elif not submit and phase.max_marks == 0 and evaluation.status == Evaluation.Status.SUBMITTED:
+        # 0-mark phase: "Evaluated" is a checkbox, so it may be unticked again (until the phase is locked)
+        evaluation.status = Evaluation.Status.PENDING
+        evaluation.submitted_at = None
     evaluation.updated_by = by_user
     evaluation.save()
 

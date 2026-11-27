@@ -60,7 +60,7 @@ class Phase(BaseModel):
                 condition=Q(evaluation_end_date__isnull=True) | Q(evaluation_end_date__gte=F("end_date")),
                 name="ck_phase_eval_end_gte_end",
             ),
-            models.CheckConstraint(condition=Q(max_marks__gt=0), name="ck_phase_max_marks_gt_0"),
+            models.CheckConstraint(condition=Q(max_marks__gte=0), name="ck_phase_max_marks_gte_0"),
             ExclusionConstraint(
                 name="ex_phase_no_overlap",
                 expressions=[
@@ -72,6 +72,25 @@ class Phase(BaseModel):
 
     def __str__(self):
         return self.name
+
+    # ------------------------------------------------------------ project phase
+    @staticmethod
+    def first_phase_ids(semester_subject_ids):
+        """{semester_subject_id: id of its first phase}. The first phase is always the project phase."""
+        firsts = {}
+        rows = (
+            Phase.objects.filter(semester_subject_id__in=set(semester_subject_ids))
+            .order_by("semester_subject_id", "order", "start_date", "id")
+            .values_list("semester_subject_id", "id")
+        )
+        for ss_id, phase_id in rows:
+            firsts.setdefault(ss_id, phase_id)
+        return firsts
+
+    @property
+    def is_project_phase(self):
+        """Phase 1 of a subject: students submit the project title and description (links optional)."""
+        return Phase.first_phase_ids([self.semester_subject_id]).get(self.semester_subject_id) == self.pk
 
     # ------------------------------------------------------------ status
     @property

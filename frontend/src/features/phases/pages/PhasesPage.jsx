@@ -15,7 +15,7 @@ import { FilterSelect } from "@/components/common/fields";
 import { optionsOf, PhaseStatus as PS } from "@/config/choices";
 import PhaseFormDialog from "@/features/phases/components/PhaseFormDialog";
 import { bulkDeletePhases, deletePhase, listPhases, lockPhase, phasesInvalidate, reorderPhases, unlockPhase } from "@/features/phases/api";
-import { dateRange, PhaseStatus } from "@/features/teams/components/TeamBits";
+import { dateRange, PhaseStatus, ProjectPhaseBadge } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useListParams } from "@/hooks/useListParams";
 import { useOfferingOptions, useSemesterOptions } from "@/hooks/useLookups";
@@ -68,7 +68,7 @@ export default function PhasesPage() {
     <RowActions
       label={`Actions for ${p.name}`}
       items={[
-        { label: "Edit", icon: Pencil, hidden: p.status === PS.LOCKED, onSelect: () => setForm({ open: true, phase: p }) },
+        { label: "Edit", icon: Pencil, onSelect: () => setForm({ open: true, phase: p }) },
         { label: "Move up", icon: ArrowUp, onSelect: () => move(p, -1) },
         { label: "Move down", icon: ArrowDown, onSelect: () => move(p, 1) },
         { label: "Lock evaluation", icon: Lock, hidden: p.status !== PS.CLOSED, onSelect: () => lock.mutate(p) },
@@ -87,8 +87,11 @@ export default function PhasesPage() {
       header: "Phase",
       cell: (p) => (
         <div className="min-w-0">
-          <p className="font-medium">
-            <span className="text-muted-foreground tabular-nums">{p.order}.</span> {p.name}
+          <p className="flex flex-wrap items-center gap-2 font-medium">
+            <span>
+              <span className="text-muted-foreground tabular-nums">{p.order}.</span> {p.name}
+            </span>
+            {p.is_project_phase && <ProjectPhaseBadge />}
           </p>
           {p.short_description && <p className="truncate text-xs text-muted-foreground">{p.short_description}</p>}
         </div>
@@ -108,8 +111,8 @@ export default function PhasesPage() {
         <div className="flex min-w-0 items-start gap-3">
           {select.cell(p)}
           <div className="min-w-0">
-            <p className="font-medium">
-              {p.order}. {p.name}
+            <p className="flex flex-wrap items-center gap-2 font-medium">
+              {p.order}. {p.name} {p.is_project_phase && <ProjectPhaseBadge />}
             </p>
             <p className="text-xs text-muted-foreground">{subjectLabel(p)}</p>
           </div>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Eye, GraduationCap, Mail, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -116,10 +117,21 @@ export default function FacultyPage() {
     { key: "phone", header: "Phone", cell: (f) => f.phone || "—" },
     { key: "ct", header: "Class teacher", cell: classTeacher },
     { key: "teaching", header: "Subjects", className: "tabular-nums", cell: (f) => f.teaching_count },
+    { key: "evaluating", header: "Evaluating", className: "tabular-nums", cell: (f) => evaluating(f) },
     { key: "status", header: "Status", cell: (f) => <StatusBadge status={f.status} /> },
     { key: "login", header: "Last login", cell: (f) => <span className="text-xs">{formatDateTime(f.last_login_at)}</span> },
     { key: "actions", header: <span className="sr-only">Actions</span>, className: "w-12 text-right", cell: actions },
   ];
+
+  // Teams this faculty member evaluates (any phase); opens Evaluations filtered to them
+  const evaluating = (f) =>
+    f.evaluation_teams_count ? (
+      <Link to={`/admin/evaluations?evaluator_id=${f.id}`} className="text-primary underline-offset-4 hover:underline" title="Open their evaluations">
+        {f.evaluation_teams_count} {f.evaluation_teams_count === 1 ? "team" : "teams"}
+      </Link>
+    ) : (
+      <span className="text-muted-foreground">0 teams</span>
+    );
 
   const renderCard = (f) => (
     <>
@@ -135,6 +147,7 @@ export default function FacultyPage() {
         fields={[
           ["Status", <StatusBadge key="s" status={f.status} />],
           ["Subjects", f.teaching_count],
+          ["Evaluating", evaluating(f)],
           ["Class teacher", classTeacher(f)],
         ]}
       />

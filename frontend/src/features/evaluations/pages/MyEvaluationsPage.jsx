@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardCheck, PencilLine, Tag } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, FileText, PencilLine, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +15,23 @@ import ListPagination from "@/components/common/ListPagination";
 import PageHeader from "@/components/common/PageHeader";
 import SearchInput from "@/components/common/SearchInput";
 import Toolbar from "@/components/common/Toolbar";
-import { PhaseStatus as PS } from "@/config/choices";
-import MarksDialog, { MarksCell } from "@/features/evaluations/components/MarksDialog";
+import { EvaluationStatus, PhaseStatus as PS } from "@/config/choices";
+import MarksDialog from "@/features/evaluations/components/MarksDialog";
+import SubmissionViewDialog from "@/features/evaluations/components/SubmissionViewDialog";
 import { listMyEvaluationPhases, listMyEvaluations, nameTeam, saveMyMarks } from "@/features/evaluations/api";
-import { dateRange, LinkList, PhaseStatus, SubmissionState } from "@/features/teams/components/TeamBits";
+import { dateRange, isSubmitted, PhaseStatus } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useListParams } from "@/hooks/useListParams";
 import { usePagedList } from "@/hooks/usePagedList";
 import { idStr, sameId } from "@/lib/ids";
+import { formatDate } from "@/lib/utils";
+
+// "2026-11-26" + 1 day, as a date string (dates are calendar days)
+const addDays = (iso, days) => {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const invalidate = [["my", "evaluations"]];
 
@@ -58,53 +67,52 @@ export default function MyEvaluationsPage() {
   const current = phaseRows.find((r) => sameId(r.phase.id, phaseId));
   const [editing, setEditing] = useState(null);
   const [naming, setNaming] = useState(null);
+  const [viewing, setViewing] = useState(null);
 
   const query = usePagedList(["my", "evaluations", "list"], listMyEvaluations, { ...params, phase_id: phaseId }, setParam);
   const rows = phaseId ? query.data?.results : [];
 
+  const evaluated = (r) => r.evaluation?.status === EvaluationStatus.SUBMITTED;
   const buttons = (r) => (
     <div className="flex justify-end gap-1">
-      <Button size="sm" variant="ghost" onClick={() => setNaming(r)} title="Name team">
-        <Tag className="size-4" /> <span className="sr-only lg:not-sr-only">Name</span>
+      <Button size="sm" variant="outline" onClick={() => setViewing(r)} title={isSubmitted(r.submission) ? "Submitted" : "Not submitted"}>
+        {isSubmitted(r.submission) ? <CheckCircle2 className="size-4 text-success" /> : <FileText className="size-4" />} Submission
       </Button>
-      <Button size="sm" variant={r.evaluation ? "ghost" : "outline"} onClick={() => setEditing(r)} disabled={!r.can_edit_marks}>
-        <PencilLine className="size-4" /> {r.evaluation ? "Edit" : "Marks"}
+      <Button size="sm" variant={r.can_edit_marks && !r.evaluation ? "default" : "outline"} onClick={() => setEditing(r)} title={evaluated(r) ? "Evaluated" : "Not evaluated yet"}>
+        {evaluated(r) ? <CheckCircle2 className="size-4 text-success" /> : <PencilLine className="size-4" />} Marks
       </Button>
     </div>
   );
   const members = (r) => r.team.members.map((m) => m.name).join(", ");
+  const teamCell = (r) => (
+    <div className="max-w-xs">
+      <p className="flex items-center gap-1 font-medium">
+        {r.team.display_name}
+        <Button size="icon" variant="ghost" className="size-7" onClick={() => setNaming(r)} title="Name team">
+          <Tag className="size-3.5" />
+          <span className="sr-only">Name {r.team.display_name}</span>
+        </Button>
+      </p>
+      <p className="truncate text-xs text-muted-foreground">{members(r)}</p>
+    </div>
+  );
+  const projectTitle = (r) =>
+    r.team.project_title ? (
+      <span className="line-clamp-2 max-w-sm">{r.team.project_title}</span>
+    ) : (
+      <span className="text-muted-foreground">Not sent yet</span>
+    );
 
   const columns = [
-    {
-      key: "team",
-      header: "Team",
-      cell: (r) => (
-        <div className="max-w-xs">
-          <p className="font-medium">{r.team.display_name}</p>
-          <p className="truncate text-xs text-muted-foreground">{members(r)}</p>
-        </div>
-      ),
-    },
-    {
-      key: "submission",
-      header: "Submission",
-      cell: (r) => (
-        <div className="space-y-1">
-          <SubmissionState submission={r.submission} />
-          {r.submission && <LinkList links={r.submission.links} />}
-        </div>
-      ),
-    },
-    { key: "marks", header: "Marks", cell: (r) => <MarksCell row={r} /> },
-    { key: "actions", header: <span className="sr-only">Actions</span>, className: "w-44 text-right", cell: buttons },
+    { key: "team", header: "Team", cell: teamCell },
+    { key: "project", header: "Project title", cell: projectTitle },
+    { key: "actions", header: <span className="sr-only">Actions</span>, className: "w-60 text-right", cell: buttons },
   ];
 
   const renderCard = (r) => (
     <>
-      <p className="font-medium">{r.team.display_name}</p>
-      <p className="text-xs text-muted-foreground">{members(r)}</p>
-      <CardFields fields={[["Submission", <SubmissionState key="s" submission={r.submission} />], ["Marks", <MarksCell key="m" row={r} />]]} />
-      {r.submission && <LinkList className="mt-2" links={r.submission.links} />}
+      {teamCell(r)}
+      <CardFields fields={[["Project", projectTitle(r)]]} />
       <div className="mt-3">{buttons(r)}</div>
     </>
   );
@@ -124,13 +132,14 @@ export default function MyEvaluationsPage() {
         <>
           <Toolbar>
             <Select value={phaseId} onValueChange={(v) => setParam("phase_id", v)}>
-              <SelectTrigger className="w-full sm:w-80" aria-label="Phase">
+              <SelectTrigger className="w-full sm:w-[30rem]" aria-label="Phase">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {phaseRows.map((r) => (
                   <SelectItem key={r.phase.id} value={idStr(r.phase.id)}>
                     Sem {r.semester_subject.semester_number} · {r.semester_subject.subject_code} · {r.phase.name} ({r.evaluated}/{r.teams})
+                    {r.phase.evaluation_end_date && ` · evaluate by ${formatDate(r.phase.evaluation_end_date)}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -138,15 +147,32 @@ export default function MyEvaluationsPage() {
             <SearchInput value={params.search} onChange={(v) => setParam("search", v)} placeholder="Search team or student…" />
           </Toolbar>
           {current && (
-            <p className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
               <PhaseStatus status={current.phase.status} />
-              Submissions {dateRange(current.phase)} · out of {Number(current.phase.max_marks)} ·{" "}
-              {current.phase.status === PS.CLOSED
-                ? "marks can be entered now"
-                : current.phase.status === PS.LOCKED
-                  ? "locked by the Admin"
-                  : "marks open after the end date"}
-            </p>
+              <span>
+                <span className="text-muted-foreground">Submissions:</span> {dateRange(current.phase)}
+              </span>
+              <span>
+                <span className="text-muted-foreground">Evaluation:</span> {formatDate(addDays(current.phase.end_date, 1))} –{" "}
+                <strong className="font-semibold">{current.phase.evaluation_end_date ? formatDate(current.phase.evaluation_end_date) : "until the Admin locks it"}</strong>
+              </span>
+              <span>
+                {Number(current.phase.max_marks) === 0 ? (
+                  <span className="text-muted-foreground">No marks · tick “Evaluated”</span>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground">Out of</span> {Number(current.phase.max_marks)}
+                  </>
+                )}
+              </span>
+              <span className="text-muted-foreground">
+                {current.phase.status === PS.CLOSED
+                  ? "Marks can be entered now."
+                  : current.phase.status === PS.LOCKED
+                    ? "Locked by the Admin."
+                    : "Marks open after the submission end date."}
+              </span>
+            </div>
           )}
           <DataView
             columns={columns}
@@ -160,7 +186,19 @@ export default function MyEvaluationsPage() {
           <ListPagination data={query.data} onPageChange={(p) => setParam("page", p)} />
         </>
       )}
-      <MarksDialog row={editing} onOpenChange={() => setEditing(null)} save={(r, body) => saveMyMarks(r.id, body)} invalidate={invalidate} />
+      <MarksDialog
+        row={editing}
+        onOpenChange={() => setEditing(null)}
+        save={(r, body) => saveMyMarks(r.id, body)}
+        invalidate={invalidate}
+        readOnly={!editing?.can_edit_marks}
+        readOnlyReason={
+          editing?.phase.status === PS.LOCKED
+            ? "This phase is locked by the Admin."
+            : `Marks can be entered after the submission window (${editing ? dateRange(editing.phase) : ""}) ends.`
+        }
+      />
+      <SubmissionViewDialog row={viewing} onOpenChange={() => setViewing(null)} />
       <NameDialog row={naming} onOpenChange={() => setNaming(null)} />
     </>
   );

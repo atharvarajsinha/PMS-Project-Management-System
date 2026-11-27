@@ -36,7 +36,11 @@ class MarksBase(Phase2Fixture):
         """Submit while open, then move the phase into the past."""
         self.as_student(self.a1).put(
             f"/api/v1/my/teams/{self.team_id}/phases/{phase.id}/submission/",
-            {"links": [{"link_type": "DEMO", "url": "https://demo.example.com"}]}, format="json",
+            {
+                "links": [{"link_type": "DEMO", "url": "https://demo.example.com"}],
+                "project_title": "Campus maps", "project_description": "Indoor maps for the campus.",
+            },
+            format="json",
         )
         phase.start_date -= timedelta(days=30)
         phase.end_date -= timedelta(days=30)
@@ -67,6 +71,19 @@ class MarksTests(MarksBase):
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(r.json()["evaluation"]["status"], "SUBMITTED")
         self.assertEqual(self.stored(phase), {self.a1.id: 0, self.b1.id: 0})
+
+    def test_zero_max_phase_marked_as_evaluated(self):
+        phase = self.make_phase(start=-1, end=1, max_marks="0")
+        self.submit_work(phase)
+        self.assertError(self.marks(self.x_api, phase, 1), 400, "VALIDATION_ERROR")
+        r = self.marks(self.x_api, phase, 0)
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual(r.json()["evaluation"]["status"], "SUBMITTED")
+        self.assertEqual(self.stored(phase), {self.a1.id: 0, self.b1.id: 0})
+        # can be unticked again while the phase isn't locked
+        r = self.marks(self.x_api, phase, 0, submit=False)
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual(r.json()["evaluation"]["status"], "PENDING")
 
     def test_master_mark_with_individual_override(self):
         phase = self.make_phase(start=-1, end=1, max_marks="20")
@@ -99,21 +116,33 @@ class MarksTests(MarksBase):
         self.assertEqual(log.old_values["students"][str(self.a1.id)], "10.00")
         self.assertEqual(log.new_values["students"][str(self.a1.id)], "18.00")
 
-    def test_lock_and_admin_correction(self):
+    def test_lock_and_admin_override(self):
         phase = self.make_phase(start=-1, end=1)
         self.submit_work(phase)
         admin = self.as_user(self.admin)
-        # the Admin can't evaluate first-hand
-        self.assertError(self.marks(admin, phase, 10, prefix="evaluations"), 409, "CONFLICT")
+        # the Admin may enter marks before the evaluator (override)
+        self.assertEqual(self.marks(admin, phase, 9, prefix="evaluations").status_code, 200)
         self.marks(self.x_api, phase, 10)
         project_services.lock_phase(phase, self.admin)
         self.assertError(self.marks(self.x_api, phase, 12), 409, "CONFLICT")
-        self.assertError(self.marks(admin, phase, 12, prefix="evaluations"), 409, "CONFLICT")
-        project_services.unlock_phase(phase, self.admin)
+        # ...and change them while the phase is locked
         r = self.marks(admin, phase, 10, students={self.b1: 12}, prefix="evaluations")
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(self.stored(phase), {self.a1.id: 10, self.b1.id: 12})
         self.assertTrue(AuditLog.objects.filter(action="evaluation.correct").exists())
+
+    def test_admin_overrides_open_phase_and_missing_submission(self):
+        phase = self.make_phase(start=-1, end=1)  # still OPEN, nothing submitted
+        r = self.marks(self.as_user(self.admin), phase, 5, prefix="evaluations")
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertError(self.marks(self.x_api, phase, 5), 409, "CONFLICT")  # the evaluator still waits
+
+    def test_faculty_list_shows_evaluation_team_count(self):
+        self.make_phase(start=-1, end=1)
+        self.make_phase(start=3, end=6)
+        rows = self.as_user(self.admin).get("/api/v1/faculty/", {"page_size": 50}).json()["results"]
+        counts = {r["name"]: r["evaluation_teams_count"] for r in rows}
+        self.assertEqual(counts["Xavier"], 1)  # one team, two phases → counted once
 
     def test_phase_max_cant_drop_below_given_marks(self):
         phase = self.make_phase(start=-1, end=1, max_marks="20")
@@ -225,3 +254,18 @@ class ProgressAndClassTeacherMarksTests(MarksBase):
         # Bina is in section B: not Xavier's class; Yamini isn't A's class teacher
         self.assertEqual(self.x_api.get(f"/api/v1/my/class-sections/{self.a.id}/teams/{self.b1.id}/").status_code, 404)
         self.assertEqual(self.as_faculty(self.y).get(f"/api/v1/my/class-sections/{self.a.id}/teams/{self.a1.id}/").status_code, 404)
+
+    def test_class_teacher_marks_grid(self):
+        phase = self.make_phase(start=-1, end=1)
+        self.submit_work(phase)
+        self.marks(self.x_api, phase, 10, students={self.a1: 14})
+        r = self.x_api.get(f"/api/v1/my/class-sections/{self.a.id}/marks/")
+        self.assertEqual(r.status_code, 200, r.content)
+        data = r.json()
+        daa = next(s for s in data["subjects"] if s["semester_subject"]["id"] == self.daa.id)
+        self.assertEqual(([p["id"] for p in daa["phases"]], daa["total_max_marks"]), ([phase.id], "20.00"))
+        asha = next(row for row in data["students"] if row["student"]["id"] == self.a1.id)
+        cell = asha["subjects"][str(self.daa.id)]
+        self.assertEqual((cell["marks"][str(phase.id)], cell["total"]), ({"marks": "14.00", "status": "SUBMITTED"}, "14.00"))
+        self.assertNotIn(self.b1.id, [row["student"]["id"] for row in data["students"]])  # section B
+        self.assertEqual(self.as_faculty(self.y).get(f"/api/v1/my/class-sections/{self.a.id}/marks/").status_code, 404)
