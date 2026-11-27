@@ -54,6 +54,9 @@ export default function StudentsPage() {
 
   const query = usePagedList(["students", "list"], listStudents, params, setParam);
   const rows = query.data?.results;
+  // S.No continues across pages: page 2 of 50 starts at 51
+  const firstSerial = ((query.data?.page || 1) - 1) * (query.data?.page_size || 0) + 1;
+  const serialOf = (s) => firstSerial + (rows?.indexOf(s) ?? 0);
 
   const invalidate = [["students"], ["sections"], ["semesters"]];
   const activate = useApiMutation((s) => activateStudent(s.id), { invalidate, success: ACTIVATED });
@@ -103,6 +106,7 @@ export default function StudentsPage() {
       className: "w-10",
       cell: select,
     },
+    { key: "sno", header: "S.No", className: "w-16 tabular-nums text-muted-foreground", cell: serialOf },
     { key: "roll", header: "Roll no.", cell: (s) => <span className="font-mono text-[13px] font-medium">{s.roll_number}</span> },
     {
       key: "name",
@@ -125,7 +129,10 @@ export default function StudentsPage() {
       <div className="flex items-start gap-3">
         <div className="pt-1">{select(s)}</div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{s.name}</p>
+          <p className="truncate font-medium">
+            <span className="mr-1.5 tabular-nums text-muted-foreground">{serialOf(s)}.</span>
+            {s.name}
+          </p>
           <p className="font-mono text-[13px] text-muted-foreground">{s.roll_number}</p>
         </div>
         {actions(s)}
