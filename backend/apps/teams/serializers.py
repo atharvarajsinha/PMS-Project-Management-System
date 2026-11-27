@@ -336,4 +336,4 @@ class MentorHistorySerializer(serializers.ModelSerializer):
 
 
 def phases_of(semester_subject_id):
-    return Phase.objects.filter(semester_subject_id=semester_subject_id).order_by("order", "start_date")
+    return Phase.objects.filter(semester_subject_id=semester_subject_id).order_by("order", "start_date").prefetch_related("criteria")

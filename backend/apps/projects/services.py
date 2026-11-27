@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from apps.common.exceptions import Conflict, InvalidInput
 
-from .models import Phase, PhaseSubmission, SubmissionLink
+from .models import Phase, PhaseCriterion, PhaseSubmission, SubmissionLink
 
 
 # ---------------------------------------------------------------- phases
@@ -43,6 +43,34 @@ def save_phase(phase):
             raise InvalidInput(details={"name": ["A phase with this name already exists for this subject."]}) from exc
         raise
     return phase
+
+
+@transaction.atomic
+def save_criteria(phase, items):
+    """Replace the phase's rubric with `items` ([{id?, name, description, kind}], in order).
+
+    Kept ids are updated (changing a criterion's kind clears the results recorded for it);
+    missing ones are deleted with their results; items without an id are added.
+    """
+    existing = {c.pk: c for c in phase.criteria.all()}
+    keep = set()
+    for order, item in enumerate(items, start=1):
+        cid = item.get("id")
+        criterion = existing.get(cid) if cid else None
+        if criterion is None:
+            PhaseCriterion.objects.create(
+                phase=phase, order=order, name=item["name"].strip(), description=item.get("description", "").strip(),
+                kind=item.get("kind") or PhaseCriterion.Kind.CHECK,
+            )
+            continue
+        keep.add(criterion.pk)
+        kind = item.get("kind") or criterion.kind
+        if kind != criterion.kind:
+            criterion.results.all().delete()
+        criterion.order, criterion.kind = order, kind
+        criterion.name, criterion.description = item["name"].strip(), item.get("description", "").strip()
+        criterion.save(update_fields=["order", "kind", "name", "description", "updated_at"])
+    phase.criteria.filter(pk__in=set(existing) - keep).delete()
 
 
 def next_order(semester_subject_id):

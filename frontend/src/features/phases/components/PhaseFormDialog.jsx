@@ -7,6 +7,7 @@ import FormDialog from "@/components/common/FormDialog";
 import FormError from "@/components/common/FormError";
 import { Form, MarkdownField, SelectField, TextField } from "@/components/common/fields";
 import { createPhase, phasesInvalidate, updatePhase } from "@/features/phases/api";
+import CriteriaEditor, { criteriaBody, criteriaDefaults, criteriaSchema } from "@/features/phases/components/CriteriaEditor";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { useOfferingOptions } from "@/hooks/useLookups";
 import { applyApiErrors } from "@/lib/forms";
@@ -22,6 +23,7 @@ const schema = z
     end_date: z.string().min(1, "Pick an end date"),
     evaluation_end_date: z.string().optional(),
     max_marks: z.coerce.number({ invalid_type_error: "Enter a number" }).min(0, "Can't be negative").max(9999),
+    criteria: criteriaSchema,
   })
   .refine((v) => !v.start_date || !v.end_date || v.end_date > v.start_date, {
     path: ["end_date"],
@@ -32,7 +34,7 @@ const schema = z
     message: "Can't be before the end date",
   });
 
-const FIELDS = ["semester_subject_id", "name", "short_description", "description", "start_date", "end_date", "evaluation_end_date", "max_marks"];
+const FIELDS = ["semester_subject_id", "name", "short_description", "description", "start_date", "end_date", "evaluation_end_date", "max_marks", "criteria"];
 
 export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOfferingId }) {
   const isEdit = !!phase;
@@ -52,12 +54,18 @@ export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOffe
       end_date: phase?.end_date ?? "",
       evaluation_end_date: phase?.evaluation_end_date ?? "",
       max_marks: phase?.max_marks ?? "",
+      criteria: criteriaDefaults(phase?.criteria),
     });
   }, [open, phase, defaultOfferingId, form]);
 
   const mutation = useApiMutation(
     (v) => {
-      const body = { ...v, semester_subject_id: apiId(v.semester_subject_id), evaluation_end_date: v.evaluation_end_date || null };
+      const body = {
+        ...v,
+        semester_subject_id: apiId(v.semester_subject_id),
+        evaluation_end_date: v.evaluation_end_date || null,
+        criteria: criteriaBody(v.criteria),
+      };
       if (isEdit) delete body.semester_subject_id;
       return isEdit ? updatePhase(phase.id, body) : createPhase(body);
     },
@@ -77,6 +85,7 @@ export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOffe
       onOpenChange={onOpenChange}
       title={isEdit ? "Edit phase" : "New phase"}
       description="Phases of a subject can't overlap. Both dates are included: submissions are open from the start date through the end date."
+      className="sm:max-w-2xl"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
@@ -116,6 +125,7 @@ export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOffe
             />
             <TextField control={form.control} name="max_marks" label="Maximum marks" type="number" inputMode="decimal" min={0} step="0.5" required />
           </div>
+          <CriteriaEditor form={form} />
           <FormActions onCancel={() => onOpenChange(false)} submitLabel={isEdit ? "Save changes" : "Create phase"} pending={mutation.isPending} />
         </form>
       </Form>

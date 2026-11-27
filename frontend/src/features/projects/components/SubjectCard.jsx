@@ -33,6 +33,7 @@ import { EvaluatorLine, LinkList, MemberList, PhaseStatus, PhaseWindows, Project
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { Markdown } from "@/components/common/Markdown";
+import { RubricList } from "@/features/phases/components/Rubric";
 
 const invalidate = [projectsKey];
 
@@ -199,6 +200,18 @@ function PhaseSlide({ phase: p, team, canSubmit, onSubmit }) {
             <dt className="font-medium text-muted-foreground">Details</dt>
             <dd>
               <Markdown>{p.description}</Markdown>
+            </dd>
+          </>
+        )}
+        {!!p.criteria?.length && (
+          <>
+            <dt className="font-medium text-muted-foreground">Criteria</dt>
+            <dd>
+              <RubricList
+                criteria={p.criteria}
+                showResults={!!team && p.status === PS.LOCKED}
+                resultsNote={team && p.status !== PS.LOCKED ? "Your evaluator checks these. You'll see the results here once evaluation is locked." : undefined}
+              />
             </dd>
           </>
         )}

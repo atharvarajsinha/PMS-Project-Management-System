@@ -141,7 +141,7 @@ class MyEvaluationViewSet(AssignmentListMixin, CollegeScopedMixin, mixins.ListMo
         data = serializer.validated_data
         evaluation, old = services.save_marks(
             assignment, default_marks=data.get("default_marks"), student_marks=data["student_marks"],
-            remarks=data.get("remarks"), submit=data["submit"],
+            remarks=data.get("remarks"), criteria=data.get("criteria"), submit=data["submit"],
             by_user=request.user, as_faculty=self.faculty,
         )
         audit.record(request, "evaluation.marks", evaluation, old=old, new=marks_audit(evaluation))
@@ -182,7 +182,7 @@ class EvaluationAdminViewSet(AssignmentListMixin, CollegeScopedMixin, mixins.Lis
         data = serializer.validated_data
         evaluation, old = services.save_marks(
             assignment, default_marks=data.get("default_marks"), student_marks=data["student_marks"],
-            remarks=data.get("remarks"), submit=data["submit"],
+            remarks=data.get("remarks"), criteria=data.get("criteria"), submit=data["submit"],
             by_user=request.user, correction=True,
         )
         audit.record(request, "evaluation.correct", evaluation, old=old, new=marks_audit(evaluation))

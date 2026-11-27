@@ -7,7 +7,7 @@ from apps.projects.serializers import SubmissionSerializer
 from apps.teams.models import TeamMember
 from apps.teams.serializers import OfferingBriefSerializer, PhaseBriefSerializer, StudentContactSerializer
 
-from .models import Evaluation, EvaluatorAssignment, StudentMark
+from .models import CriterionResult, Evaluation, EvaluatorAssignment, StudentMark
 
 
 def assignment_queryset():
@@ -22,6 +22,8 @@ def assignment_queryset():
     ).prefetch_related(
         Prefetch("team__members", queryset=TeamMember.objects.select_related("student__user", "student__section").order_by("id")),
         Prefetch("evaluation__student_marks", queryset=StudentMark.objects.select_related("student__user")),
+        "evaluation__criterion_results",
+        "phase__criteria",
     )
 
 
@@ -56,13 +58,17 @@ class EvaluationSerializer(serializers.ModelSerializer):
     evaluated_by = FacultyBriefSerializer(allow_null=True)
     student_marks = StudentMarkSerializer(many=True)
     summary = serializers.SerializerMethodField()
+    criteria_results = serializers.SerializerMethodField()
 
     class Meta:
         model = Evaluation
         fields = [
-            "default_marks", "max_marks", "student_marks", "summary", "remarks", "status", "submitted_at",
-            "evaluated_by", "updated_at",
+            "default_marks", "max_marks", "student_marks", "summary", "criteria_results", "remarks", "status",
+            "submitted_at", "evaluated_by", "updated_at",
         ]
+
+    def get_criteria_results(self, e) -> list[dict]:
+        return [{"criterion_id": r.criterion_id, "value": r.value} for r in e.criterion_results.all()]
 
     def get_summary(self, e) -> dict | None:
         values = [m.marks for m in e.student_marks.all()]
@@ -83,13 +89,18 @@ class AssignmentSerializer(serializers.ModelSerializer):
     evaluation = serializers.SerializerMethodField()
     max_marks = serializers.DecimalField(source="phase.max_marks", max_digits=6, decimal_places=2)
     can_edit_marks = serializers.SerializerMethodField()
+    criteria = serializers.SerializerMethodField()
 
     class Meta:
         model = EvaluatorAssignment
         fields = [
             "id", "phase", "semester_subject", "team", "evaluator", "source", "submission", "evaluation",
-            "max_marks", "can_edit_marks",
+            "max_marks", "criteria", "can_edit_marks",
         ]
+
+    def get_criteria(self, a) -> list[dict]:
+        """The phase's rubric, in order."""
+        return [{"id": c.id, "name": c.name, "description": c.description, "kind": c.kind} for c in a.phase.criteria.all()]
 
     def get_semester_subject(self, a) -> dict:
         return OfferingBriefSerializer(a.phase.semester_subject).data
@@ -123,18 +134,28 @@ class StudentMarkInputSerializer(serializers.Serializer):
     marks = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=0)
 
 
+class CriterionInputSerializer(serializers.Serializer):
+    criterion_id = serializers.IntegerField(min_value=1)
+    # tick/cross: 1 / 0; rating: 1..5; null clears it
+    value = serializers.IntegerField(min_value=0, max_value=5, allow_null=True)
+
+
 class MarksSerializer(serializers.Serializer):
-    """`default_marks` applies to every member; `student_marks` overrides it per student."""
+    """`default_marks` applies to every member; `student_marks` overrides it per student.
+    `criteria` records the team's rubric (optional; criteria left out keep their value)."""
 
     default_marks = serializers.DecimalField(max_digits=6, decimal_places=2, min_value=0, required=False, allow_null=True)
     student_marks = StudentMarkInputSerializer(many=True, required=False, max_length=50)
     remarks = serializers.CharField(required=False, allow_blank=True, max_length=5000)
+    criteria = CriterionInputSerializer(many=True, required=False, max_length=30)
     submit = serializers.BooleanField(default=True)
 
     def validate(self, attrs):
         if attrs.get("default_marks") is None and not attrs.get("student_marks"):
             raise serializers.ValidationError({"default_marks": ["Enter a mark for everyone or per student."]})
         attrs["student_marks"] = {row["student_id"]: row["marks"] for row in attrs.get("student_marks", [])}
+        if "criteria" in attrs:
+            attrs["criteria"] = {row["criterion_id"]: row["value"] for row in attrs["criteria"]}
         return attrs
 
 

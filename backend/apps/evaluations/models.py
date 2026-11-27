@@ -91,3 +91,21 @@ class StudentMark(BaseModel):
 
     def __str__(self):
         return f"{self.student}: {self.marks}"
+
+
+class CriterionResult(BaseModel):
+    """The evaluator's tick/cross (1 / 0) or rating (1–5) for one rubric criterion, for one team."""
+
+    evaluation = models.ForeignKey(Evaluation, on_delete=models.CASCADE, related_name="criterion_results")
+    criterion = models.ForeignKey("projects.PhaseCriterion", on_delete=models.CASCADE, related_name="results")
+    value = models.PositiveSmallIntegerField()
+
+    class Meta:
+        db_table = "criterion_results"
+        constraints = [
+            models.UniqueConstraint(fields=["evaluation", "criterion"], name="uq_criterion_result_per_evaluation"),
+            models.CheckConstraint(condition=Q(value__lte=5), name="ck_criterion_result_value_lte_5"),
+        ]
+
+    def __str__(self):
+        return f"{self.criterion}: {self.value}"

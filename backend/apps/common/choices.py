@@ -118,6 +118,13 @@ class EvaluationStatus(models.TextChoices):
     SUBMITTED = "SUBMITTED", "Submitted"
 
 
+class CriterionKind(models.TextChoices):
+    """How an evaluator records one rubric criterion of a phase, per team."""
+
+    CHECK = "CHECK", "Tick / cross"
+    RATING = "RATING", "Rating (1–5)"
+
+
 class SubmissionProgress(models.TextChoices):
     """A team's submission for a phase, as students see it (drafts count as pending)."""
 
@@ -141,6 +148,7 @@ REGISTRY = {
     "CollegeStatus": CollegeStatus,
     "EmailStatus": EmailStatus,
     "PhaseStatus": PhaseStatus,
+    "CriterionKind": CriterionKind,
     "SubmissionStatus": SubmissionStatus,
     "LinkType": LinkType,
     "TeamRole": TeamRole,

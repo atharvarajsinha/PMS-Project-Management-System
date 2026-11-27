@@ -10,6 +10,8 @@ import FormError from "@/components/common/FormError";
 import PasswordInput from "@/components/common/PasswordInput";
 import StatusBadge from "@/components/common/StatusBadge";
 import { EvaluationStatus } from "@/config/choices";
+import { KindIcon } from "@/features/phases/components/CriteriaEditor";
+import { RubricValueInput } from "@/features/phases/components/Rubric";
 import { isSubmitted } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { formatDate } from "@/lib/utils";
@@ -71,7 +73,9 @@ export default function MarksDialog({ row, onOpenChange, save, invalidate, corre
   const [master, setMaster] = useState("");
   const [perStudent, setPerStudent] = useState({}); // { studentId: "12.5" }
   const [remarks, setRemarks] = useState("");
+  const [rubric, setRubric] = useState({}); // { criterionId: 1/0 or 1..5 or null }
   const [error, setError] = useState(null);
+  const criteria = row?.criteria || [];
   const submitted = isSubmitted(row?.submission);
   // The Admin (correction) overrides: marks may be given even without a submission
   const locked = readOnly || (!submitted && !correction);
@@ -90,6 +94,7 @@ export default function MarksDialog({ row, onOpenChange, save, invalidate, corre
     setMaster(start);
     setPerStudent(Object.fromEntries(row.team.members.map((m) => [m.id, given[m.id] ?? start])));
     setRemarks(row.evaluation?.remarks ?? "");
+    setRubric(Object.fromEntries((row.evaluation?.criteria_results || []).map((r) => [r.criterion_id, r.value])));
     setEvaluatedChecked(row.evaluation?.status === EvaluationStatus.SUBMITTED);
   }, [row, submitted]);
 
@@ -104,6 +109,7 @@ export default function MarksDialog({ row, onOpenChange, save, invalidate, corre
         default_marks: noMarks ? "0" : master === "" ? null : master,
         student_marks: members.map((m) => ({ student_id: m.id, marks: noMarks ? "0" : perStudent[m.id] })),
         remarks,
+        ...(criteria.length ? { criteria: criteria.map((c) => ({ criterion_id: c.id, value: rubric[c.id] ?? null })) } : {}),
         submit,
       }),
     {
@@ -130,7 +136,7 @@ export default function MarksDialog({ row, onOpenChange, save, invalidate, corre
       if (!submitted && !correction && value !== 0) return setError("Nothing was submitted for this phase, so every mark must be 0.");
     }
     setError(null);
-    mutation.mutateAsync(submit).catch((e) => setError(e.details?.student_marks?.join(" ") || e.details?.default_marks?.join(" ") || e.message));
+    mutation.mutateAsync(submit).catch((e) => setError(e.details?.student_marks?.join(" ") || e.details?.default_marks?.join(" ") || e.details?.criteria?.join(" ") || e.message));
   };
 
   return (
@@ -221,6 +227,41 @@ export default function MarksDialog({ row, onOpenChange, save, invalidate, corre
             </ul>
           </section>
           </>
+          )}
+
+          {criteria.length > 0 && (
+            <section className="space-y-2" aria-labelledby="rubric-title">
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 id="rubric-title" className="text-sm font-semibold">
+                  Evaluation criteria
+                </h3>
+                <span className="text-xs text-muted-foreground">
+                  {criteria.filter((c) => rubric[c.id] != null).length} of {criteria.length} recorded
+                </span>
+              </div>
+              <ul className="divide-y rounded-md border">
+                {criteria.map((c) => (
+                  <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-1.5 text-sm font-medium">
+                        <span className="text-muted-foreground">
+                          <KindIcon kind={c.kind} />
+                        </span>
+                        {c.name}
+                      </p>
+                      {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
+                    </div>
+                    <RubricValueInput
+                      criterion={c}
+                      value={rubric[c.id] ?? null}
+                      onChange={(v) => setRubric((r) => ({ ...r, [c.id]: v }))}
+                      disabled={readOnly}
+                    />
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground">For the whole team. Students see these once the phase is locked; they don&apos;t change marks.</p>
+            </section>
           )}
 
           <div className="space-y-2">

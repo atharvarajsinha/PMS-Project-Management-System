@@ -94,6 +94,11 @@ export default function PhasesPage() {
             {p.is_project_phase && <ProjectPhaseBadge />}
           </p>
           {p.short_description && <p className="truncate text-xs text-muted-foreground">{p.short_description}</p>}
+          {!!p.criteria?.length && (
+            <p className="truncate text-xs text-muted-foreground" title={p.criteria.map((c) => c.name).join(", ")}>
+              {p.criteria.length} {p.criteria.length === 1 ? "criterion" : "criteria"}: {p.criteria.map((c) => c.name).join(", ")}
+            </p>
+          )}
         </div>
       ),
     },

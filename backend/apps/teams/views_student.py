@@ -58,8 +58,12 @@ def team_settings(college):
     }
 
 
-def phase_rows(team, semester_subject_id):
+def phase_rows(team, semester_subject_id, *, rubric_results_always=False):
     """Phases of the offering with this team's submission and evaluation progress (never marks).
+
+    Each phase lists its rubric `criteria`. The team's tick/cross or rating per criterion
+    (`result`) is included once the phase is locked, or always with `rubric_results_always`
+    (the team's mentor).
 
     Submission window: start_date .. end_date. Evaluation window: the day after end_date ..
     evaluation_end_date (open-ended until locked when not set). Evaluation is COMPLETED once the
@@ -68,10 +72,13 @@ def phase_rows(team, semester_subject_id):
     from datetime import timedelta
 
     from apps.common.choices import EvaluationProgress, SubmissionProgress
-    from apps.evaluations.models import Evaluation
+    from apps.evaluations.models import CriterionResult, Evaluation
 
-    submissions, evaluated = {}, set()
+    submissions, evaluated, results = {}, set(), {}
     if team is not None:
+        results = dict(
+            CriterionResult.objects.filter(evaluation__assignment__team=team).values_list("criterion_id", "value")
+        )
         submissions = {s.phase_id: s for s in PhaseSubmission.objects.filter(team=team).prefetch_related("links")}
         evaluated = set(
             Evaluation.objects.filter(assignment__team=team, status=Evaluation.Status.SUBMITTED).values_list(
@@ -81,6 +88,8 @@ def phase_rows(team, semester_subject_id):
     rows = []
     for index, phase in enumerate(phases_of(semester_subject_id)):
         sub = submissions.get(phase.id)
+        status = phase.effective_status()
+        show_results = rubric_results_always or status == phase.Status.LOCKED
         rows.append(
             {
                 "id": phase.id,
@@ -92,7 +101,14 @@ def phase_rows(team, semester_subject_id):
                 "start_date": phase.start_date,
                 "end_date": phase.end_date,
                 "max_marks": phase.max_marks,
-                "status": phase.effective_status(),
+                "status": status,
+                "criteria": [
+                    {
+                        "id": c.id, "name": c.name, "description": c.description, "kind": c.kind,
+                        "result": results.get(c.id) if show_results else None,
+                    }
+                    for c in phase.criteria.all()
+                ],
                 "submission": SubmissionSerializer(sub).data if sub else None,
                 "submission_progress": SubmissionProgress.SUBMITTED
                 if sub is not None and sub.is_submitted

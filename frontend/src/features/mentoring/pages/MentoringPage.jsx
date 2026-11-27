@@ -13,6 +13,7 @@ import StatusBadge from "@/components/common/StatusBadge";
 import { MentorStatus } from "@/config/choices";
 import { acceptMentoring, getMentoring, listMentoring, listMentoringHistory, rejectMentoring } from "@/features/mentoring/api";
 import { dateRange, EvaluatorLine, LinkList, MemberList, offeringLabel, PhaseStatus, SubmissionState } from "@/features/teams/components/TeamBits";
+import { RubricList } from "@/features/phases/components/Rubric";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { formatDateTime } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ function TeamPhases({ id }) {
           </div>
           <SubmissionState submission={p.submission} />
           {p.submission && <LinkList links={p.submission.links} />}
+          {!!p.criteria?.length && <RubricList criteria={p.criteria} showResults className="pt-1" />}
         </li>
       ))}
     </ul>

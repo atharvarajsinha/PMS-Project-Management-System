@@ -75,7 +75,7 @@ class MyMentoringViewSet(FacultyMixin, mixins.ListModelMixin, mixins.RetrieveMod
                 "team": TeamSerializer(team, context=context).data,
             }
             if with_phases and a.status == MentorStatus.ACCEPTED:
-                row["phases"] = phase_rows(team, team.semester_subject_id)
+                row["phases"] = phase_rows(team, team.semester_subject_id, rubric_results_always=True)
             rows.append(row)
         return rows
 

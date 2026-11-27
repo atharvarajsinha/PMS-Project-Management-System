@@ -6,7 +6,7 @@ from apps.academics.models import SemesterSubject
 from apps.common.choices import LinkType
 from apps.common.serializers import CollegeScopedPKField, UserBriefSerializer
 
-from .models import Phase, PhaseSubmission, SubmissionLink
+from .models import Phase, PhaseCriterion, PhaseSubmission, SubmissionLink
 
 
 class SubmissionLinkSerializer(serializers.ModelSerializer):
@@ -62,6 +62,19 @@ def college_offerings(college):
     return SemesterSubject.objects.filter(semester__college=college)
 
 
+class PhaseCriterionSerializer(serializers.ModelSerializer):
+    """One rubric checkpoint. Send `id` to keep an existing one (and its results); omit it for a new one."""
+
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(max_length=200)
+    description = serializers.CharField(max_length=500, required=False, allow_blank=True, default="")
+
+    class Meta:
+        model = PhaseCriterion
+        fields = ["id", "name", "description", "kind", "order"]
+        read_only_fields = ["order"]
+
+
 class PhaseSerializer(serializers.ModelSerializer):
     semester_subject_id = CollegeScopedPKField(scope=college_offerings, source="semester_subject")
     semester_subject = serializers.SerializerMethodField()
@@ -71,11 +84,13 @@ class PhaseSerializer(serializers.ModelSerializer):
     order = serializers.IntegerField(read_only=True)
     is_project_phase = serializers.SerializerMethodField()
     stats = serializers.SerializerMethodField()
+    # Rubric: the whole list in order. On update it replaces the current list.
+    criteria = PhaseCriterionSerializer(many=True, required=False, max_length=30)
 
     class Meta:
         model = Phase
         fields = [
-            "id", "semester_subject_id", "semester_subject", "name", "short_description", "description",
+            "id", "semester_subject_id", "semester_subject", "name", "short_description", "description", "criteria",
             "start_date", "end_date", "evaluation_end_date", "max_marks", "order", "is_project_phase", "status",
             "locked_at", "locked_by", "unlocked_at", "stats", "created_at", "updated_at",
         ]
@@ -126,6 +141,13 @@ class PhaseSerializer(serializers.ModelSerializer):
             )
             if highest is not None and attrs["max_marks"] < highest:
                 errors["max_marks"] = [f"Marks of up to {highest:g} were already given; max marks can't be lower."]
+        if "criteria" in attrs:
+            names = [c["name"].strip().lower() for c in attrs["criteria"]]
+            if len(names) != len(set(names)):
+                errors["criteria"] = ["Two criteria have the same name."]
+            known = set(instance.criteria.values_list("id", flat=True)) if instance is not None else set()
+            if any(c.get("id") and c["id"] not in known for c in attrs["criteria"]):
+                errors["criteria"] = ["A criterion doesn't belong to this phase. Reload and try again."]
         if errors:
             raise serializers.ValidationError(errors)
         return attrs

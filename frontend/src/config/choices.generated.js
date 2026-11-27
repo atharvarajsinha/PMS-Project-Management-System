@@ -74,6 +74,16 @@ export const CHOICES = Object.freeze({
       "label": "Locked"
     }
   ],
+  "CriterionKind": [
+    {
+      "value": "CHECK",
+      "label": "Tick / cross"
+    },
+    {
+      "value": "RATING",
+      "label": "Rating (1\u20135)"
+    }
+  ],
   "SubmissionStatus": [
     {
       "value": "DRAFT",
@@ -216,6 +226,7 @@ export const AccountStatus = Object.freeze({ ACTIVE: "ACTIVE", INACTIVE: "INACTI
 export const CollegeStatus = Object.freeze({ ACTIVE: "ACTIVE", INACTIVE: "INACTIVE" });
 export const EmailStatus = Object.freeze({ PENDING: "PENDING", SENT: "SENT", FAILED: "FAILED" });
 export const PhaseStatus = Object.freeze({ UPCOMING: "UPCOMING", OPEN: "OPEN", CLOSED: "CLOSED", LOCKED: "LOCKED" });
+export const CriterionKind = Object.freeze({ CHECK: "CHECK", RATING: "RATING" });
 export const SubmissionStatus = Object.freeze({ DRAFT: "DRAFT", SUBMITTED: "SUBMITTED" });
 export const LinkType = Object.freeze({ REPOSITORY: "REPOSITORY", DOCUMENTATION: "DOCUMENTATION", DEMO: "DEMO", PRESENTATION: "PRESENTATION", GOOGLE_DRIVE: "GOOGLE_DRIVE", GOOGLE_FORM: "GOOGLE_FORM", VIDEO: "VIDEO", OTHER: "OTHER" });
 export const TeamRole = Object.freeze({ LEAD: "LEAD", MEMBER: "MEMBER" });

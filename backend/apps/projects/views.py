@@ -1,6 +1,7 @@
 """College Admin: project phases per semester-subject (create, edit, reorder, lock/unlock, delete)."""
 
 import django_filters
+from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
@@ -53,6 +54,7 @@ class PhaseViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
         return (
             Phase.objects.filter(semester_subject__semester__college=self.college)
             .select_related("semester_subject__semester", "semester_subject__subject", "locked_by")
+            .prefetch_related("criteria")
             .annotate(
                 teams_count=Count("evaluator_assignments", distinct=True),
                 submitted_count=Count(
@@ -75,11 +77,14 @@ class PhaseViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
+        data = dict(serializer.validated_data)
+        criteria = data.pop("criteria", [])
         offering = data["semester_subject"]
         services.ensure_no_overlap(offering.id, data["start_date"], data["end_date"])
         phase = Phase(**data, order=services.next_order(offering.id), created_by=request.user)
-        services.save_phase(phase)
+        with transaction.atomic():
+            services.save_phase(phase)
+            services.save_criteria(phase, criteria)
         evaluation_services.sync_phase(phase)  # every existing team gets its evaluator for this phase
         audit.record(request, "phase.create", phase, new=audit.snapshot(phase, AUDIT_FIELDS))
         return self._respond(phase, status.HTTP_201_CREATED)
@@ -89,10 +94,15 @@ class PhaseViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(phase, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         old = audit.snapshot(phase, AUDIT_FIELDS)
-        for field, value in serializer.validated_data.items():
+        data = dict(serializer.validated_data)
+        criteria = data.pop("criteria", None)
+        for field, value in data.items():
             setattr(phase, field, value)
         services.ensure_no_overlap(phase.semester_subject_id, phase.start_date, phase.end_date, exclude_id=phase.pk)
-        services.save_phase(phase)
+        with transaction.atomic():
+            services.save_phase(phase)
+            if criteria is not None:
+                services.save_criteria(phase, criteria)
         audit.record(request, "phase.update", phase, old=old, new=audit.snapshot(phase, AUDIT_FIELDS))
         return self._respond(phase)
 

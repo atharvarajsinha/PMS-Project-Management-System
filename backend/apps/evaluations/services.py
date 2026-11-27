@@ -17,7 +17,7 @@ from django.utils import timezone
 from apps.academics.models import SectionSubject
 from apps.common.exceptions import Conflict, InvalidInput
 
-from .models import Evaluation, EvaluatorAssignment, StudentMark
+from .models import CriterionResult, Evaluation, EvaluatorAssignment, StudentMark
 
 AUTO = EvaluatorAssignment.Source.AUTO
 OVERRIDE = EvaluatorAssignment.Source.ADMIN_OVERRIDE
@@ -136,11 +136,37 @@ def marks_snapshot(evaluation):
         "students": {str(m.student_id): m.marks for m in evaluation.student_marks.all()},
         "remarks": evaluation.remarks,
         "status": evaluation.status,
+        "criteria": {str(r.criterion_id): r.value for r in evaluation.criterion_results.all()},
     }
 
 
+def save_criteria_results(evaluation, phase, values):
+    """{criterion_id: value or None} -> the team's rubric for this phase. None clears a criterion."""
+    from apps.projects.models import PhaseCriterion
+
+    criteria = {c.pk: c for c in phase.criteria.all()}
+    if set(values) - set(criteria):
+        raise InvalidInput(details={"criteria": ["A criterion doesn't belong to this phase. Reload and try again."]})
+    for cid, value in values.items():
+        c = criteria[cid]
+        if value is not None and not c.valid_value(value):
+            allowed = "1 (tick) or 0 (cross)" if c.kind == PhaseCriterion.Kind.CHECK else f"1 to {PhaseCriterion.RATING_MAX}"
+            raise InvalidInput(details={"criteria": [f"{c.name}: enter {allowed}."]})
+    existing = {r.criterion_id: r for r in evaluation.criterion_results.all()}
+    for cid, value in values.items():
+        row = existing.get(cid)
+        if value is None:
+            if row is not None:
+                row.delete()
+        elif row is None:
+            CriterionResult.objects.create(evaluation=evaluation, criterion_id=cid, value=value)
+        elif row.value != value:
+            row.value = value
+            row.save(update_fields=["value", "updated_at"])
+
+
 @transaction.atomic
-def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=None, submit, by_user, as_faculty=None, correction=False):
+def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=None, criteria=None, submit, by_user, as_faculty=None, correction=False):
     """Evaluator enters marks (as_faculty), or the Admin overrides them (correction=True).
 
     Marks are per student. `default_marks` ("same for everyone") applies to every member that
@@ -225,4 +251,6 @@ def save_marks(assignment, *, default_marks=None, student_marks=None, remarks=No
         elif row.marks != value:
             row.marks = value
             row.save(update_fields=["marks", "updated_at"])
+    if criteria is not None:
+        save_criteria_results(evaluation, phase, criteria)
     return evaluation, old

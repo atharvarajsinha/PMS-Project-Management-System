@@ -123,6 +123,35 @@ class Phase(BaseModel):
         )
 
 
+class PhaseCriterion(BaseModel):
+    """One rubric checkpoint of a phase (e.g. "Problem statement", "Approach").
+
+    The admin sets any number per phase. The evaluator records each one per team, as a
+    tick/cross or a 1–5 rating. The rubric is shown to students; it doesn't change marks.
+    """
+
+    Kind = choices.CriterionKind
+    RATING_MAX = 5
+
+    phase = models.ForeignKey(Phase, on_delete=models.CASCADE, related_name="criteria")
+    order = models.PositiveSmallIntegerField(default=0)
+    name = models.CharField(max_length=200)
+    description = models.CharField(max_length=500, blank=True)
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.CHECK)
+
+    class Meta:
+        db_table = "phase_criteria"
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.name
+
+    def valid_value(self, value):
+        if self.kind == self.Kind.CHECK:
+            return value in (0, 1)
+        return 1 <= value <= self.RATING_MAX
+
+
 class PhaseSubmission(BaseModel):
     """One per team per phase; its links are in SubmissionLink."""
 
