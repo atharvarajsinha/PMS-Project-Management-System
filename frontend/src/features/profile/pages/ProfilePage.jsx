@@ -16,7 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 import { applyApiErrors } from "@/lib/forms";
 import { formatDateTime } from "@/lib/utils";
 import { phone } from "@/lib/schemas";
-import { labelOf } from "@/config/choices";
+import { labelOf, Role } from "@/config/choices";
+import FacultyProfileCard from "@/features/profile/components/FacultyProfileCard";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name is required"),
@@ -132,6 +133,11 @@ export default function ProfilePage() {
             fullWidth
           />
         </section>
+        {user.role === Role.FACULTY && (
+          <div className="xl:col-span-2">
+            <FacultyProfileCard />
+          </div>
+        )}
       </div>
     </>
   );

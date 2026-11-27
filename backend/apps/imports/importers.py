@@ -22,8 +22,8 @@ from apps.academics.serializers import (
     SubjectSerializer,
     ensure_class_teacher_free,
 )
-from apps.accounts.models import Faculty
-from apps.accounts.serializers import FacultySerializer, StudentSerializer
+from apps.accounts.models import Faculty, Specialization
+from apps.accounts.serializers import FacultySerializer, SpecializationSerializer, StudentSerializer
 from apps.accounts.views_people import person_snapshot
 from apps.common import audit
 from apps.common.exceptions import InvalidInput, PMSError
@@ -245,24 +245,83 @@ class Importer:
 # ---------------------------------------------------------------- people
 
 
+class SpecializationImporter(Importer):
+    kind = "specializations"
+    label = "Specializations"
+    description = (
+        "Adds to the list of faculty specializations (AI/ML, Cyber Security, ...). "
+        "A name that already exists (ignoring case) is skipped. Import these before faculty."
+    )
+    columns = (Column("name", True, "Specialization name, e.g. AI/ML"),)
+    examples = ({"name": "AI/ML"}, {"name": "Cyber Security"}, {"name": "Data Science"})
+
+    def import_row(self, row):
+        name = " ".join(row["name"].split())
+        existing = Specialization.objects.filter(college=self.college, name__iexact=name).first() if name else None
+        if existing:
+            return "skipped", f"{existing.name} already exists."
+        spec = self.save(SpecializationSerializer(data={"name": name}, context=self.context), college=self.college)
+        audit.record(self.request, "specialization.create", spec, new={"name": spec.name})
+        return "created", f"{spec.name} added."
+
+
+def split_list(value):
+    """'AI/ML; Data Science' or 'AI/ML | Data Science' → ['AI/ML', 'Data Science'] (commas are kept, names may have them)."""
+    return [" ".join(part.split()) for part in re.split(r"[;|\n]", value or "") if part.strip()]
+
+
 class FacultyImporter(Importer):
     kind = "faculty"
     label = "Faculty"
-    description = "Adds faculty accounts. They are created inactive; activate them to email their login details."
+    description = (
+        "Adds faculty accounts. They are created inactive; activate them to email their login details. "
+        "Specializations must already be in the list (import or add them first); separate several with ';'."
+    )
     columns = (
         Column("name", True, "Full name"),
         Column("email", True, "Unique email; used to sign in"),
         Column("phone", False, "Optional, digits with optional leading +"),
+        Column("designation", False, "Optional, e.g. Assistant Professor"),
+        Column("qualification", False, "Optional, e.g. Ph.D. (Computer Science)"),
+        Column("experience_years", False, "Optional, whole years"),
+        Column("specializations", False, "Optional, names from the specialization list separated by ';', e.g. AI/ML; Data Science"),
+        Column("research_areas", False, "Optional, free text"),
     )
     examples = (
-        {"name": "Ravi Kumar", "email": "ravi.kumar@college.edu", "phone": "+919800000001"},
-        {"name": "Meera Nair", "email": "meera.nair@college.edu", "phone": ""},
+        {
+            "name": "Ravi Kumar", "email": "ravi.kumar@college.edu", "phone": "+919800000001",
+            "designation": "Associate Professor", "qualification": "Ph.D. (Computer Science)", "experience_years": "12",
+            "specializations": "AI/ML; Data Science", "research_areas": "Deep learning for medical imaging",
+        },
+        {"name": "Meera Nair", "email": "meera.nair@college.edu", "phone": "", "designation": "Assistant Professor",
+         "specializations": "Cyber Security"},
     )
+    field_columns = {"specialization_ids": "specializations"}
+
+    def specializations(self, row, column="specializations"):
+        names = split_list(row[column])
+        if not names:
+            return []
+        known = {s.name.lower(): s for s in Specialization.objects.filter(college=self.college)}
+        unknown = [n for n in names if n.lower() not in known]
+        if unknown:
+            raise RowError({
+                column: f"Not in the specialization list: {', '.join(unknown)}. Add them under Specializations first, or fix the spelling."
+            })
+        return list(dict.fromkeys(known[n.lower()].pk for n in names))  # unique, in order
 
     def import_row(self, row):
-        faculty = self.save(FacultySerializer(data={k: row[k] for k in ("name", "email", "phone")}, context=self.context))
+        data = {k: row[k] for k in ("name", "email", "phone", "designation", "qualification", "research_areas")}
+        experience = row["experience_years"]
+        if experience:
+            if not experience.isdigit():
+                raise RowError({"experience_years": "Enter a whole number of years, e.g. 5."})
+            data["experience_years"] = int(experience)
+        data["specialization_ids"] = self.specializations(row)
+        faculty = self.save(FacultySerializer(data=data, context=self.context))
         audit.record(self.request, "faculty.create", faculty, new=person_snapshot(faculty))
-        return "created", f"{faculty.user.name} added (inactive)."
+        specs = ", ".join(s.name for s in faculty.specializations.all())
+        return "created", f"{faculty.user.name} added (inactive){f' · {specs}' if specs else ''}."
 
 
 class StudentImporter(Importer):
@@ -483,6 +542,6 @@ class MentorImporter(Importer):
 IMPORTERS = {
     cls.kind: cls
     for cls in (
-        FacultyImporter, SemesterImporter, SubjectImporter, SectionImporter, StudentImporter, MappingImporter, MentorImporter,
+        SpecializationImporter, FacultyImporter, SemesterImporter, SubjectImporter, SectionImporter, StudentImporter, MappingImporter, MentorImporter,
     )
 }

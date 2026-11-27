@@ -221,7 +221,9 @@ class MentorTests(Phase2Fixture):
         t3 = self.create_team(self.a3, members=[self.a2], offering=self.dsa)
         self.assertError(self.request(self.a3, t3, self.z), 409, "CONFLICT")
         mentors = self.as_student(self.b1).get(f"/api/v1/my/teams/{self.t2}/mentors/").json()
-        self.assertEqual(mentors, [{"faculty": mentors[0]["faculty"], "available": False}])
+        self.assertEqual(
+            mentors, [{"faculty": mentors[0]["faculty"], "specializations": [], "designation": "", "available": False}]
+        )
 
     def test_histories(self):
         self.request(self.a1, self.t1, self.z)

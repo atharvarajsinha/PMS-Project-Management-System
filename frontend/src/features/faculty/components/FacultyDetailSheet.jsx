@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ErrorState from "@/components/common/ErrorState";
 import StatusBadge from "@/components/common/StatusBadge";
 import { getFaculty } from "@/features/faculty/api";
+import FacultyProfileView from "@/features/faculty/components/FacultyProfileView";
 import { useIsDesktop } from "@/hooks/useMediaQuery";
 import { formatDateTime } from "@/lib/utils";
 
@@ -44,7 +45,11 @@ export default function FacultyDetailSheet({ facultyId, onOpenChange }) {
               <Field label="Last login">{formatDateTime(f.last_login_at)}</Field>
             </dl>
             <section>
-              <h3 className="mb-3 text-base font-semibold">Class teacher of</h3>
+              <h3 className="mb-3 text-base font-semibold">Profile</h3>
+              <FacultyProfileView faculty={f} />
+            </section>
+            <section>
+              <h3 className="mb-3 text-base font-semibold">Class coordinator of</h3>
               {f.class_teacher_of.length ? (
                 <ul className="space-y-2 text-sm">
                   {f.class_teacher_of.map((c) => (

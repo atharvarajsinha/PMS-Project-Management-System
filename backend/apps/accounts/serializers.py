@@ -13,7 +13,7 @@ from apps.common.serializers import (
 )
 
 from . import services
-from .models import Faculty, Student, User
+from .models import Faculty, Specialization, Student, User
 
 
 def ensure_teams_allow_move(student, new_section):
@@ -177,7 +177,96 @@ class _PersonSerializer(serializers.ModelSerializer):
         user.save(update_fields=["name", "phone", "updated_at"])
 
 
-class FacultySerializer(_PersonSerializer):
+# ---------------------------------------------------------------- faculty profile
+
+
+class SpecializationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=100)
+    faculty_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = Specialization
+        fields = ["id", "name", "faculty_count", "created_at", "updated_at"]
+
+    def validate_name(self, value):
+        value = " ".join(value.split())
+        if not value:
+            raise serializers.ValidationError("This field may not be blank.")
+        qs = Specialization.objects.filter(college=self.context["college"], name__iexact=value)
+        if self.instance is not None:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(f"{value} already exists.")
+        return value
+
+
+class SpecializationBriefSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class PublicationSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=500)
+    venue = serializers.CharField(max_length=300, required=False, allow_blank=True, default="")  # journal / conference
+    year = serializers.IntegerField(min_value=1950, max_value=2100, required=False, allow_null=True, default=None)
+    url = serializers.URLField(max_length=500, required=False, allow_blank=True, default="")
+
+
+class CertificationSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=300)
+    issuer = serializers.CharField(max_length=300, required=False, allow_blank=True, default="")
+    year = serializers.IntegerField(min_value=1950, max_value=2100, required=False, allow_null=True, default=None)
+    url = serializers.URLField(max_length=500, required=False, allow_blank=True, default="")
+
+
+class FacultyProfileFieldsMixin(serializers.Serializer):
+    """Profile fields shared by the admin's faculty API and the faculty member's own profile."""
+
+    specializations = SpecializationBriefSerializer(many=True, read_only=True)
+    specialization_ids = CollegeScopedPKField(
+        scope=lambda c: Specialization.objects.filter(college=c),
+        many=True,
+        write_only=True,
+        required=False,
+        source="specializations",
+    )
+    designation = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    qualification = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    experience_years = serializers.IntegerField(min_value=0, max_value=70, required=False, allow_null=True)
+    research_areas = serializers.CharField(required=False, allow_blank=True, max_length=5000)
+    bio = serializers.CharField(required=False, allow_blank=True, max_length=5000)
+    publications = PublicationSerializer(many=True, required=False)
+    certifications = CertificationSerializer(many=True, required=False)
+
+    PROFILE_FIELDS = [
+        "specializations", "specialization_ids", "designation", "qualification", "experience_years",
+        "research_areas", "bio", "publications", "certifications",
+    ]
+    PROFILE_SCALARS = ("designation", "qualification", "experience_years", "research_areas", "bio", "publications", "certifications")
+
+    def save_profile(self, faculty, data):
+        changed = [f for f in self.PROFILE_SCALARS if f in data]
+        for field in changed:
+            setattr(faculty, field, data[field])
+        if changed:
+            faculty.save(update_fields=[*changed, "updated_at"])
+        if "specializations" in data:
+            faculty.specializations.set(data["specializations"])
+        return faculty
+
+
+class FacultyProfileSerializer(FacultyProfileFieldsMixin, serializers.ModelSerializer):
+    """GET/PATCH /me/faculty-profile/ — the faculty member's own profile."""
+
+    class Meta:
+        model = Faculty
+        fields = ["id", *FacultyProfileFieldsMixin.PROFILE_FIELDS, "updated_at"]
+
+    def update(self, instance, validated_data):
+        return self.save_profile(instance, validated_data)
+
+
+class FacultySerializer(FacultyProfileFieldsMixin, _PersonSerializer):
     class_teacher_of = serializers.SerializerMethodField()
     teaching_count = serializers.IntegerField(read_only=True, default=0)
     # Distinct teams this faculty member evaluates in at least one phase
@@ -185,7 +274,7 @@ class FacultySerializer(_PersonSerializer):
 
     class Meta:
         model = Faculty
-        fields = _PersonSerializer.PERSON_FIELDS + [
+        fields = _PersonSerializer.PERSON_FIELDS + FacultyProfileFieldsMixin.PROFILE_FIELDS + [
             "class_teacher_of", "teaching_count", "evaluation_teams_count", "created_at", "updated_at",
         ]
 
@@ -202,13 +291,14 @@ class FacultySerializer(_PersonSerializer):
 
     def create(self, validated_data):
         user = validated_data["user"]
-        return services.create_faculty(
+        faculty = services.create_faculty(
             college=self.context["college"], name=user["name"], email=user["email"], phone=user.get("phone", "")
         )
+        return self.save_profile(faculty, validated_data)
 
     def update(self, instance, validated_data):
         self.update_user(instance, validated_data.get("user", {}))
-        return instance
+        return self.save_profile(instance, validated_data)
 
 
 class FacultyDetailSerializer(FacultySerializer):

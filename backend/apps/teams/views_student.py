@@ -279,7 +279,7 @@ class MyTeamViewSet(StudentMixin, mixins.ListModelMixin, mixins.RetrieveModelMix
     def mentors(self, request, pk=None):
         """This semester's mentor list, each marked available or full (no slot counts)."""
         team = self._team()
-        rows = services.mentors_with_load(team.semester_subject.semester_id).filter(faculty__user__status="ACTIVE").order_by("faculty__user__name")
+        rows = services.mentors_with_load(team.semester_subject.semester_id).filter(faculty__user__status="ACTIVE").order_by("faculty__user__name").prefetch_related("faculty__specializations")
         return Response(AvailableMentorSerializer(rows, many=True).data)
 
     @extend_schema(responses={200: InviteHistorySerializer(many=True)})

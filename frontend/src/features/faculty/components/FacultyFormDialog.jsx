@@ -6,13 +6,19 @@ import FormActions from "@/components/common/FormActions";
 import FormDialog from "@/components/common/FormDialog";
 import FormError from "@/components/common/FormError";
 import { Form, TextField } from "@/components/common/fields";
+import FacultyProfileFields, {
+  PROFILE_FIELD_NAMES,
+  profileBody,
+  profileDefaults,
+  profileSchema,
+} from "@/features/faculty/components/FacultyProfileFields";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { createFaculty, updateFaculty } from "@/features/faculty/api";
 import { applyApiErrors } from "@/lib/forms";
 import { email, name, phone } from "@/lib/schemas";
 
-const createSchema = z.object({ name, email, phone });
-const editSchema = z.object({ name, phone });
+const createSchema = z.object({ name, email, phone, ...profileSchema });
+const editSchema = z.object({ name, phone, ...profileSchema });
 
 export default function FacultyFormDialog({ open, onOpenChange, faculty }) {
   const isEdit = !!faculty;
@@ -20,22 +26,22 @@ export default function FacultyFormDialog({ open, onOpenChange, faculty }) {
   const form = useForm({
     resolver: zodResolver(isEdit ? editSchema : createSchema),
     mode: "onTouched",
-    defaultValues: { name: "", email: "", phone: "" },
+    defaultValues: { name: "", email: "", phone: "", ...profileDefaults(null) },
   });
 
   useEffect(() => {
     if (!open) return;
     setFormError(null);
-    form.reset({ name: faculty?.name || "", email: faculty?.email || "", phone: faculty?.phone || "" });
+    form.reset({ name: faculty?.name || "", email: faculty?.email || "", phone: faculty?.phone || "", ...profileDefaults(faculty) });
   }, [open, faculty, form]);
 
   const mutation = useApiMutation(
     (v) =>
       isEdit
-        ? updateFaculty(faculty.id, { name: v.name, phone: v.phone || null })
-        : createFaculty({ name: v.name, email: v.email, phone: v.phone || null }),
+        ? updateFaculty(faculty.id, { name: v.name, phone: v.phone || null, ...profileBody(v) })
+        : createFaculty({ name: v.name, email: v.email, phone: v.phone || null, ...profileBody(v) }),
     {
-      invalidate: [["faculty"]],
+      invalidate: [["faculty"], ["specializations"]],
       success: isEdit ? "Faculty updated" : "Faculty created. Activate the account to email login details.",
       silentError: true,
       onSuccess: () => onOpenChange(false),
@@ -43,10 +49,10 @@ export default function FacultyFormDialog({ open, onOpenChange, faculty }) {
   );
 
   const onSubmit = (values) =>
-    mutation.mutateAsync(values).catch((error) => setFormError(applyApiErrors(form, error, ["name", "email", "phone"])));
+    mutation.mutateAsync(values).catch((error) => setFormError(applyApiErrors(form, error, ["name", "email", "phone", ...PROFILE_FIELD_NAMES])));
 
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={isEdit ? "Edit faculty" : "New faculty"}>
+    <FormDialog open={open} onOpenChange={onOpenChange} title={isEdit ? "Edit faculty" : "New faculty"} className="sm:max-w-2xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
           <FormError message={formError} />
@@ -64,6 +70,13 @@ export default function FacultyFormDialog({ open, onOpenChange, faculty }) {
               className="md:col-span-2"
             />
           </div>
+          <section className="space-y-4 border-t pt-6">
+            <div>
+              <h3 className="text-base font-semibold">Profile</h3>
+              <p className="text-sm text-muted-foreground">Optional. Faculty can also fill this in themselves from their Profile page.</p>
+            </div>
+            <FacultyProfileFields form={form} specializationHint="No specializations yet. Add them with Specializations on the Faculty page." />
+          </section>
           <FormActions onCancel={() => onOpenChange(false)} submitLabel={isEdit ? "Save changes" : "Create faculty"} pending={mutation.isPending} />
         </form>
       </Form>

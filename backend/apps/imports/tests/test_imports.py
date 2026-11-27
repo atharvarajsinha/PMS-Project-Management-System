@@ -23,7 +23,7 @@ class ImportTests(PMSTestCase):
     def test_kinds_and_templates(self):
         r = self.client.get("/api/v1/imports/")
         kinds = [k["kind"] for k in r.json()["results"]]
-        self.assertEqual(kinds, ["faculty", "semesters", "subjects", "sections", "students", "subject-mappings", "mentors"])
+        self.assertEqual(kinds, ["specializations", "faculty", "semesters", "subjects", "sections", "students", "subject-mappings", "mentors"])
         r = self.client.get("/api/v1/imports/students/template/")
         self.assertEqual(r.status_code, 200)
         self.assertTrue(r.content.decode().startswith("name,email,roll_number,semester,section,phone"))

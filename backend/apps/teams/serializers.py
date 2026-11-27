@@ -287,7 +287,12 @@ class AvailableMentorSerializer(serializers.Serializer):
     """What a student sees when choosing a mentor: available or full, never the counts."""
 
     faculty = FacultyBriefSerializer()
+    specializations = serializers.SerializerMethodField()
+    designation = serializers.CharField(source="faculty.designation")
     available = serializers.SerializerMethodField()
+
+    def get_specializations(self, obj) -> list[str]:
+        return [s.name for s in obj.faculty.specializations.all()]
 
     def get_available(self, obj) -> bool:
         return (obj.load or 0) < obj.capacity

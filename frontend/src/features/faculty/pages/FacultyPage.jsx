@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Eye, GraduationCap, Mail, Pencil, Plus, Power, Trash2 } from "lucide-react";
+import { Eye, GraduationCap, Mail, Pencil, Plus, Power, Tags, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import BulkBar from "@/components/common/BulkBar";
@@ -18,6 +18,8 @@ import { FilterSelect, STATUS_OPTIONS } from "@/components/common/fields";
 import ImportButton from "@/features/imports/components/ImportButton";
 import FacultyDetailSheet from "@/features/faculty/components/FacultyDetailSheet";
 import FacultyFormDialog from "@/features/faculty/components/FacultyFormDialog";
+import SpecializationsDialog from "@/features/faculty/components/SpecializationsDialog";
+import { useSpecializationOptions } from "@/features/specializations/api";
 import {
   activateFaculty,
   bulkActivateFaculty,
@@ -45,7 +47,9 @@ export default function FacultyPage() {
   const [form, setForm] = useState({ open: false, faculty: null });
   const [detailId, setDetailId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { type, faculty }
+  const [specsOpen, setSpecsOpen] = useState(false);
   const selection = useSelection();
+  const specs = useSpecializationOptions();
 
   const query = usePagedList(["faculty", "list"], listFaculty, params, setParam);
   const rows = query.data?.results;
@@ -110,10 +114,11 @@ export default function FacultyPage() {
       cell: (f) => (
         <button type="button" className="min-w-0 text-left" onClick={() => setDetailId(f.id)}>
           <p className="truncate font-medium hover:underline">{f.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{f.email}</p>
+          <p className="truncate text-xs text-muted-foreground">{[f.designation, f.email].filter(Boolean).join(" · ")}</p>
         </button>
       ),
     },
+    { key: "specs", header: "Specializations", cell: (f) => specList(f) },
     { key: "phone", header: "Phone", cell: (f) => f.phone || "—" },
     { key: "ct", header: "Class coordinator", cell: classTeacher },
     { key: "teaching", header: "Subjects", className: "tabular-nums", cell: (f) => f.teaching_count },
@@ -122,6 +127,13 @@ export default function FacultyPage() {
     { key: "login", header: "Last login", cell: (f) => <span className="text-xs">{formatDateTime(f.last_login_at)}</span> },
     { key: "actions", header: <span className="sr-only">Actions</span>, className: "w-12 text-right", cell: actions },
   ];
+
+  const specList = (f) =>
+    f.specializations?.length ? (
+      <span className="line-clamp-2 text-sm">{f.specializations.map((s) => s.name).join(", ")}</span>
+    ) : (
+      <span className="text-muted-foreground">—</span>
+    );
 
   // Teams this faculty member evaluates (any phase); opens Evaluations filtered to them
   const evaluating = (f) =>
@@ -146,6 +158,7 @@ export default function FacultyPage() {
       <CardFields
         fields={[
           ["Status", <StatusBadge key="s" status={f.status} />],
+          ["Specializations", specList(f)],
           ["Subjects", f.teaching_count],
           ["Evaluating", evaluating(f)],
           ["Class coordinator", classTeacher(f)],
@@ -155,7 +168,7 @@ export default function FacultyPage() {
   );
 
   const cf = confirm?.faculty;
-  const filtered = params.search || params.status;
+  const filtered = params.search || params.status || params.specialization_id;
 
   return (
     <>
@@ -164,6 +177,9 @@ export default function FacultyPage() {
         description="Add faculty, activate their accounts and see what they teach."
         actions={
           <>
+            <Button variant="outline" onClick={() => setSpecsOpen(true)}>
+              <Tags className="size-4" /> Specializations
+            </Button>
             <ImportButton kind="faculty" />
             <Button onClick={() => setForm({ open: true, faculty: null })}>
               <Plus className="size-4" /> New faculty
@@ -174,6 +190,15 @@ export default function FacultyPage() {
       <Toolbar>
         <SearchInput value={params.search} onChange={(v) => setParam("search", v)} placeholder="Search name or email…" />
         <FilterSelect label="Status" value={params.status} onChange={(v) => setParam("status", v)} options={STATUS_OPTIONS} allLabel="All statuses" />
+        <FilterSelect
+          label="Specialization"
+          value={params.specialization_id}
+          onChange={(v) => setParam("specialization_id", v)}
+          options={specs.options}
+          loading={specs.isLoading}
+          emptyText="No specializations yet."
+          allLabel="Any specialization"
+        />
         <FilterSelect label="Sort" value={params.ordering === "name" ? "all" : params.ordering} onChange={(v) => setParam("ordering", v)} options={ORDERING} allLabel="Name A–Z" />
       </Toolbar>
       <BulkBar count={selection.count} onClear={selection.clear}>
@@ -216,6 +241,7 @@ export default function FacultyPage() {
       <ListPagination data={query.data} onPageChange={(p) => setParam("page", p)} />
 
       <FacultyFormDialog open={form.open} faculty={form.faculty} onOpenChange={(open) => setForm((s) => ({ ...s, open }))} />
+      <SpecializationsDialog open={specsOpen} onOpenChange={setSpecsOpen} />
       <FacultyDetailSheet facultyId={detailId} onOpenChange={(open) => !open && setDetailId(null)} />
       <ConfirmDialog
         open={confirm?.type === "deactivate"}

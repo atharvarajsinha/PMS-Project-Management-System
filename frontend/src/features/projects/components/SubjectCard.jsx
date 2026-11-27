@@ -49,8 +49,14 @@ function MentorPicker({ teamId, open, onOpenChange }) {
       <ul className="divide-y rounded-md border">
         {rows.map((m) => (
           <li key={m.faculty.id} className="flex min-h-12 items-center justify-between gap-3 px-3 py-2">
-            <div className="text-sm">
-              <p className="font-medium">{m.faculty.name}</p>
+            <div className="min-w-0 space-y-1 text-sm">
+              <p className="font-medium">
+                {m.faculty.name}
+                {m.designation && <span className="font-normal text-muted-foreground"> · {m.designation}</span>}
+              </p>
+              {!!m.specializations?.length && (
+                <p className="text-xs text-muted-foreground">{m.specializations.join(", ")}</p>
+              )}
               <StatusBadge status={m.available ? "ACTIVE" : "LOCKED"} label={m.available ? "Available" : "Full"} />
             </div>
             <Button size="sm" onClick={() => request.mutate(m)} disabled={!m.available || request.isPending}>

@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 
 from apps.common import choices
 from apps.common.models import BaseModel
@@ -77,9 +78,36 @@ class User(AbstractBaseUser, BaseModel):
         return self.college is None or self.college.is_active
 
 
+class Specialization(BaseModel):
+    """An area of expertise (AI/ML, Cyber Security, ...). Each college keeps its own list."""
+
+    college = models.ForeignKey("colleges.College", on_delete=models.CASCADE, related_name="specializations")
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "specializations"
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(Lower("name"), "college", name="uq_specialization_name_per_college"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class Faculty(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="faculty")
     college = models.ForeignKey("colleges.College", on_delete=models.CASCADE, related_name="faculty")
+    # ---- profile (filled by the faculty member or the admin)
+    specializations = models.ManyToManyField(Specialization, blank=True, related_name="faculty")
+    designation = models.CharField(max_length=100, blank=True)  # e.g. Assistant Professor
+    qualification = models.CharField(max_length=255, blank=True)  # e.g. Ph.D. (Computer Science)
+    experience_years = models.PositiveSmallIntegerField(null=True, blank=True)
+    research_areas = models.TextField(blank=True)
+    bio = models.TextField(blank=True)
+    # [{title, venue, year, url}] and [{name, issuer, year, url}]
+    publications = models.JSONField(default=list, blank=True)
+    certifications = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = "faculty"

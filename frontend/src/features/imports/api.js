@@ -17,7 +17,8 @@ export const downloadTemplate = (kind) =>
 
 // Query keys each import can change
 const INVALIDATE = {
-  faculty: [["faculty"], ["dashboard"]],
+  specializations: [["specializations"], ["faculty"]],
+  faculty: [["faculty"], ["specializations"], ["dashboard"]],
   semesters: [["semesters"], ["dashboard"]],
   subjects: [["subjects"], ["dashboard"]],
   sections: [["sections"], ["semesters"], ["faculty"], ["dashboard"]],

@@ -3,7 +3,8 @@
 import django_filters
 from django.db.models import Count, Prefetch
 from drf_spectacular.utils import extend_schema
-from rest_framework import status, viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -11,13 +12,20 @@ from apps.academics.models import Section
 from apps.common import audit
 from apps.common.bulk import BulkDeleteMixin
 from apps.common.exceptions import HasDependents
-from apps.common.permissions import IsCollegeAdmin
+from apps.common.permissions import IsCollegeAdmin, IsFaculty, ReadAnyWriteCollegeAdmin
 from apps.common.serializers import BulkIdsSerializer
 from apps.common.tenancy import CollegeScopedMixin
 
 from . import services
-from .models import Faculty, Student, User
-from .serializers import FacultyDetailSerializer, FacultySerializer, StudentBulkSerializer, StudentSerializer
+from .models import Faculty, Specialization, Student, User
+from .serializers import (
+    FacultyDetailSerializer,
+    FacultyProfileSerializer,
+    FacultySerializer,
+    SpecializationSerializer,
+    StudentBulkSerializer,
+    StudentSerializer,
+)
 
 PERSON_AUDIT_FIELDS = ["name", "email", "phone", "status"]
 
@@ -113,10 +121,11 @@ class PersonViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
 
 class FacultyFilter(django_filters.FilterSet):
     status = django_filters.ChoiceFilter(field_name="user__status", choices=User.Status.choices)
+    specialization_id = django_filters.NumberFilter(field_name="specializations", distinct=True)
 
     class Meta:
         model = Faculty
-        fields = ["status"]
+        fields = ["status", "specialization_id"]
 
 
 @extend_schema(tags=["faculty"])
@@ -133,7 +142,8 @@ class FacultyViewSet(PersonViewSet):
             Faculty.objects.filter(college=self.college)
             .select_related("user")
             .prefetch_related(
-                Prefetch("class_teacher_sections", queryset=Section.objects.select_related("semester"))
+                Prefetch("class_teacher_sections", queryset=Section.objects.select_related("semester")),
+                "specializations",
             )
             .annotate(
                 teaching_count=Count("section_subjects", distinct=True),
@@ -143,6 +153,54 @@ class FacultyViewSet(PersonViewSet):
 
     def get_serializer_class(self):
         return FacultyDetailSerializer if self.action == "retrieve" else FacultySerializer
+
+
+# ---------------------------------------------------------------- specializations
+
+
+@extend_schema(tags=["faculty"])
+class SpecializationViewSet(BulkDeleteMixin, CollegeScopedMixin, viewsets.ModelViewSet):
+    """The college's list of faculty specializations (AI/ML, Cyber Security, ...).
+    Everyone in the college can read it (faculty pick from it); only the admin changes it."""
+
+    permission_classes = [ReadAnyWriteCollegeAdmin]
+    serializer_class = SpecializationSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
+    search_fields = ["name"]
+    ordering_aliases = {"name": "name", "faculty_count": "faculty_count", "created_at": "created_at"}
+    ordering = ["name"]
+
+    def get_queryset(self):
+        return Specialization.objects.filter(college=self.college).annotate(faculty_count=Count("faculty", distinct=True))
+
+    def perform_create(self, serializer):
+        obj = serializer.save(college=self.college)
+        audit.record(self.request, "specialization.create", obj, new={"name": obj.name})
+
+    def perform_update(self, serializer):
+        old = {"name": serializer.instance.name}
+        obj = serializer.save()
+        audit.record(self.request, "specialization.update", obj, old=old, new={"name": obj.name})
+
+    def perform_destroy(self, instance):
+        audit.record(self.request, "specialization.delete", instance, old={"name": instance.name})
+        instance.delete()  # removes it from every faculty profile too
+
+
+@extend_schema(tags=["faculty-portal"])
+class MyFacultyProfileView(CollegeScopedMixin, generics.RetrieveUpdateAPIView):
+    """GET/PATCH /me/faculty-profile/ — a faculty member's own specializations, research, papers, certifications."""
+
+    permission_classes = [IsFaculty]
+    serializer_class = FacultyProfileSerializer
+    http_method_names = ["get", "patch"]
+
+    def get_object(self):
+        return get_object_or_404(Faculty.objects.prefetch_related("specializations"), user=self.request.user)
+
+    def perform_update(self, serializer):
+        faculty = serializer.save()
+        audit.record(self.request, "faculty.profile_update", faculty)
 
 
 # ---------------------------------------------------------------- students
