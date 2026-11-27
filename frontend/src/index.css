@@ -35,6 +35,7 @@
     --gradient-from: 199 86% 37%;
     --gradient-to: 207 84% 30%;
     --glow: 197 92% 62%;
+    --glow-2: 190 92% 88%;
     /* Small field icons follow the primary blue; "Important" notices use the warning tone */
     --copper: 199 86% 36%;
     --amber: 30 92% 33%;
@@ -71,8 +72,48 @@
     --gradient-from: 199 95% 63%;
     --gradient-to: 210 92% 58%;
     --glow: 199 95% 60%;
+    --glow-2: 199 95% 60%;
     --copper: 199 95% 64%;
     --amber: 38 92% 56%;
+  }
+
+  /* Brown palette (PBL form reference): warm brown ink, soft lavender glow.
+     Picked from the theme menu; stored as data-palette="brown" on <html>. */
+  :root[data-palette="brown"]:not(.dark) {
+    --background: 240 33% 99%;
+    --foreground: 260 8% 12%;
+    --card-foreground: 260 8% 12%;
+    --popover-foreground: 260 8% 12%;
+    --primary: 20 25% 30%;
+    --secondary: 20 30% 97%;
+    --secondary-foreground: 20 25% 24%;
+    --muted: 20 25% 97%;
+    --muted-foreground: 20 18% 36%;
+    --accent: 20 35% 95%;
+    --accent-foreground: 20 30% 26%;
+    --warning: 43 75% 34%;
+    --info: 20 25% 30%;
+    --border: 0 0% 90%;
+    --input: 0 0% 88%;
+    --ring: 20 25% 30%;
+    --gradient-from: 20 26% 36%;
+    --gradient-to: 18 30% 24%;
+    --glow: 236 60% 66%;
+    --glow-2: 20 60% 85%;
+    --copper: 18 62% 40%;
+    --amber: 43 75% 37%;
+  }
+  .dark[data-palette="brown"] {
+    --primary: 24 45% 74%;
+    --accent-foreground: 24 50% 80%;
+    --info: 24 45% 74%;
+    --ring: 24 45% 74%;
+    --gradient-from: 26 48% 76%;
+    --gradient-to: 20 40% 64%;
+    --glow: 236 70% 72%;
+    --glow-2: 236 70% 72%;
+    --copper: 22 60% 66%;
+    --amber: 43 80% 60%;
   }
 
   * { @apply border-border; }
@@ -85,6 +126,11 @@
       radial-gradient(900px 480px at 100% 0%, hsl(190 92% 88% / 0.55), transparent 58%),
       radial-gradient(900px 620px at 50% 112%, hsl(205 92% 91% / 0.5), transparent 66%);
     background-attachment: fixed;
+  }
+  [data-palette="brown"]:not(.dark) body {
+    background-image:
+      radial-gradient(1100px 560px at 8% -12%, hsl(236 80% 94% / 0.55), transparent 62%),
+      radial-gradient(900px 480px at 100% 0%, hsl(20 60% 95% / 0.6), transparent 58%);
   }
   /* Dark mode stays black: only a faint cool sheen at the top edge */
   .dark body {
@@ -131,6 +177,11 @@
     box-shadow:
       0 1px 2px hsl(203 62% 13% / 0.04),
       0 14px 34px -22px hsl(203 62% 13% / 0.28);
+  }
+  [data-palette="brown"] .shadow-soft {
+    box-shadow:
+      0 1px 2px hsl(260 8% 12% / 0.04),
+      0 18px 40px -16px hsl(var(--glow) / 0.38);
   }
   .dark .shadow-soft {
     box-shadow: none;

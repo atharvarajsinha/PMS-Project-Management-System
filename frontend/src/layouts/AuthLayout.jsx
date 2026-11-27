@@ -7,7 +7,7 @@ export default function AuthLayout() {
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute -left-28 top-4 size-80 rounded-full bg-[hsl(var(--glow)/0.18)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -right-24 bottom-0 size-96 rounded-full bg-[hsl(190_92%_88%/0.35)] blur-3xl dark:bg-[hsl(var(--glow)/0.08)]" />
+      <div aria-hidden className="pointer-events-none absolute -right-24 bottom-0 size-96 rounded-full bg-[hsl(var(--glow-2)/0.35)] blur-3xl dark:bg-[hsl(var(--glow-2)/0.08)]" />
       <div className="relative z-10 flex justify-end p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <ThemeToggle />
       </div>

@@ -6,9 +6,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTheme } from "@/context/ThemeContext";
+import { PALETTES, useTheme } from "@/context/ThemeContext";
 
 const options = [
   { value: "light", label: "Light", icon: Sun },
@@ -17,7 +18,7 @@ const options = [
 ];
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, palette, setPalette } = useTheme();
   const Current = options.find((o) => o.value === theme)?.icon || Laptop;
   return (
     <DropdownMenu>
@@ -32,6 +33,16 @@ export default function ThemeToggle() {
           {options.map((o) => (
             <DropdownMenuRadioItem key={o.value} value={o.value}>
               <o.icon className="mr-2 size-4" /> {o.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Colour</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={palette} onValueChange={setPalette}>
+          {Object.entries(PALETTES).map(([value, p]) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <span className="mr-2 size-4 rounded-full ring-1 ring-border" style={{ backgroundColor: p.swatch }} aria-hidden />
+              {p.label}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

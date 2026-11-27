@@ -13,6 +13,7 @@
         try { t = localStorage.getItem("pms-theme") || "dark"; } catch (e) {}
         var d = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
         if (d) document.documentElement.classList.add("dark");
+        try { if (localStorage.getItem("pms-palette") === "brown") document.documentElement.dataset.palette = "brown"; } catch (e) {}
       })();
     </script>
   </head>
