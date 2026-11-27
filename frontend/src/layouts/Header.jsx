@@ -1,15 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, Menu, UserRound } from "lucide-react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { ChevronRight, Download, LogOut, Menu, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import CollegeSwitcher from "@/components/common/CollegeSwitcher";
 import Logo from "@/components/common/Logo";
@@ -18,7 +11,6 @@ import ThemeToggle from "@/components/common/ThemeToggle";
 import NavGroups from "@/layouts/NavGroups";
 import { HOME_BY_ROLE, useAuth } from "@/context/AuthContext";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { labelOf } from "@/config/choices";
 
 export default function Header({ groups }) {
   const { user, logout } = useAuth();
@@ -63,49 +55,35 @@ export default function Header({ groups }) {
           {user?.role === "SUPER_ADMIN" && <CollegeSwitcher />}
           <RefreshButton />
           <ThemeToggle />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Account menu"
-                className="group inline-flex h-10 min-w-0 items-center gap-2.5 rounded-full border border-border bg-card p-1 text-left shadow-sm transition-colors hover:border-primary/30 hover:bg-accent/40 data-[state=open]:border-primary/30 sm:pr-3"
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-primary ring-1 ring-primary/10">
-                  <UserRound className="size-4" strokeWidth={1.9} aria-hidden />
-                </span>
-                <span className="hidden min-w-0 flex-col leading-tight sm:flex">
-                  <span className="max-w-[10rem] truncate text-[13px] font-semibold text-foreground">{user?.name}</span>
-                  <span className="max-w-[10rem] truncate font-mono text-[10.5px] text-muted-foreground">{user?.email}</span>
-                </span>
-                <ChevronDown className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 sm:block" aria-hidden />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5 font-normal">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-primary ring-1 ring-primary/10">
-                  <UserRound className="size-[18px]" strokeWidth={1.9} aria-hidden />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">{user?.name}</span>
-                  <span className="block truncate font-mono text-[11px] text-muted-foreground">{user?.email}</span>
-                  <span className="mt-1 inline-block rounded-full border border-border px-2 py-px font-mono text-[10px] uppercase tracking-[0.1em] text-primary">
-                    {labelOf("Role", user?.role)}
-                  </span>
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => navigate("/profile")}>
-                <UserRound className="size-4" /> Profile
-              </DropdownMenuItem>
-              {canInstall && <DropdownMenuItem onSelect={install}>Install app</DropdownMenuItem>}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleLogout}>
-                <LogOut className="size-4" /> Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" className="hidden h-10 rounded-xl px-4 lg:inline-flex" onClick={handleLogout}>
-            <LogOut className="size-4" /> Sign Out
+          {canInstall && (
+            <Button variant="outline" size="icon" className="size-10 rounded-xl" aria-label="Install app" title="Install app" onClick={install}>
+              <Download className="size-4" />
+            </Button>
+          )}
+          <NavLink
+            to="/profile"
+            aria-label="Profile"
+            title="Profile"
+            className={({ isActive }) =>
+              cn(
+                "group inline-flex h-10 min-w-0 items-center gap-2.5 rounded-full border border-border bg-card p-1 text-left shadow-sm transition-colors hover:border-primary/30 hover:bg-accent/40 sm:pr-3",
+                isActive && "border-primary/30 bg-accent/40",
+              )
+            }
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-primary ring-1 ring-primary/10">
+              <UserRound className="size-4" strokeWidth={1.9} aria-hidden />
+            </span>
+            <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+              <span className="max-w-[10rem] truncate text-[13px] font-semibold text-foreground">{user?.name}</span>
+              <span className="max-w-[10rem] truncate font-mono text-[10.5px] text-muted-foreground">{user?.email}</span>
+            </span>
+            <ChevronRight className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 sm:block" aria-hidden />
+          </NavLink>
+          {/* Icon-only below lg so it fits on phones and tablets */}
+          <Button variant="outline" className="size-10 rounded-xl p-0 lg:w-auto lg:px-4" aria-label="Sign out" onClick={handleLogout}>
+            <LogOut className="size-4" />
+            <span className="hidden lg:inline">Sign Out</span>
           </Button>
         </div>
       </div>
