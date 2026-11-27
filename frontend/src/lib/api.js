@@ -1,4 +1,5 @@
 import axios from "axios";
+import { requestFinished, requestStarted } from "@/lib/apiActivity";
 
 const api = axios.create({
   // From .env. Keep it relative ("/api/v1") so cookies stay first-party: Vite proxies it in dev, Vercel rewrites it in prod.
@@ -6,6 +7,23 @@ const api = axios.create({
   withCredentials: true,
   timeout: 20000,
 });
+
+// Count requests in flight for the top loading bar. Registered first, so this response handler
+// runs before the others (a retried request is counted again as its own request).
+api.interceptors.request.use((config) => {
+  requestStarted();
+  return config;
+});
+api.interceptors.response.use(
+  (res) => {
+    requestFinished();
+    return res;
+  },
+  (error) => {
+    requestFinished();
+    return Promise.reject(error);
+  },
+);
 
 // CSRF token from GET /auth/csrf/ (X-CSRFToken header). When the API is on another domain the
 // csrftoken cookie belongs to that domain and document.cookie can't see it, so keep it here.

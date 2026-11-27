@@ -35,7 +35,7 @@ export function RequireCollegeContext({ children }) {
 // Public pages: a logged-in user goes to their home instead
 export function RedirectIfAuthed({ children }) {
   const { user, status } = useAuth();
-  if (status === "loading") return <FullPageLoader />;
+  if (status === "loading") return <FullPageLoader variant="auth" />;
   if (user) {
     return <Navigate to={user.must_change_password ? "/change-password" : HOME_BY_ROLE[user.role] || "/"} replace />;
   }

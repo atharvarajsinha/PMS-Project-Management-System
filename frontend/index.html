@@ -14,11 +14,65 @@
         var d = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
         if (d) document.documentElement.classList.add("dark");
         try { if (localStorage.getItem("pms-palette") === "brown") document.documentElement.dataset.palette = "brown"; } catch (e) {}
+        // Which start-up skeleton to draw (sign-in card or app shell) until React takes over #root
+        if (/^\/(login|forgot-password|reset-password)(\/|$)/.test(location.pathname)) document.documentElement.dataset.boot = "auth";
       })();
     </script>
+    <style>
+      html[data-boot="auth"] .boot-app, html:not([data-boot="auth"]) .boot-auth { display: none; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Start-up skeleton (same shapes as FullPageLoader); React replaces it on mount -->
+      <div class="boot-app flex min-h-dvh flex-col" aria-busy="true" aria-label="Loading">
+        <div class="flex h-[4.25rem] items-center gap-3 border-b border-border/70 bg-card/85 px-4 md:px-6">
+          <div class="size-10 animate-pulse rounded-full bg-muted"></div>
+          <div class="h-5 w-16 animate-pulse rounded-md bg-muted lg:w-56"></div>
+          <div class="ml-auto flex items-center gap-2">
+            <div class="size-10 animate-pulse rounded-xl bg-muted"></div>
+            <div class="size-10 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-10 w-10 animate-pulse rounded-full bg-muted sm:w-44"></div>
+          </div>
+        </div>
+        <div class="flex flex-1">
+          <div class="hidden w-64 shrink-0 flex-col gap-2 border-r border-border/70 bg-card/60 px-3 pt-5 lg:flex">
+            <div class="h-10 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-10 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-10 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-10 animate-pulse rounded-xl bg-muted"></div>
+          </div>
+          <div class="mx-auto w-full max-w-7xl flex-1 space-y-8 px-4 py-6 md:px-6">
+            <div class="h-9 w-64 max-w-full animate-pulse rounded-md bg-muted"></div>
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div class="h-24 animate-pulse rounded-2xl bg-muted"></div>
+              <div class="h-24 animate-pulse rounded-2xl bg-muted"></div>
+              <div class="h-24 animate-pulse rounded-2xl bg-muted"></div>
+              <div class="h-24 animate-pulse rounded-2xl bg-muted"></div>
+            </div>
+            <div class="space-y-2">
+              <div class="h-12 animate-pulse rounded-xl bg-muted"></div>
+              <div class="h-12 animate-pulse rounded-xl bg-muted"></div>
+              <div class="h-12 animate-pulse rounded-xl bg-muted"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="boot-auth flex min-h-dvh items-start justify-center px-4 pt-20 sm:items-center sm:pt-0" aria-busy="true" aria-label="Loading">
+        <div class="w-full max-w-md">
+          <div class="mb-8 flex items-center justify-center gap-3">
+            <div class="size-10 animate-pulse rounded-full bg-muted"></div>
+            <div class="h-5 w-56 animate-pulse rounded-md bg-muted"></div>
+          </div>
+          <div class="space-y-6 rounded-[1.25rem] border border-border bg-card p-6 sm:p-8">
+            <div class="h-12 w-40 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-11 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-11 animate-pulse rounded-xl bg-muted"></div>
+            <div class="h-12 animate-pulse rounded-xl bg-muted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

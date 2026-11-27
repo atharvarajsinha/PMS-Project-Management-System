@@ -12,6 +12,7 @@ import { RouterProvider } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import PwaUpdatePrompt from "@/components/common/PwaUpdatePrompt";
+import TopLoadingBar from "@/components/common/TopLoadingBar";
 import { AuthProvider } from "@/context/AuthContext";
 import { CollegeProvider } from "@/context/CollegeContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -32,6 +33,7 @@ enableMocks().then(() => {
           <AuthProvider>
             <CollegeProvider>
               <TooltipProvider delayDuration={300}>
+                <TopLoadingBar />
                 <RouterProvider router={router} />
                 <Toaster richColors closeButton />
                 {import.meta.env.VITE_USE_MOCKS !== "true" && <PwaUpdatePrompt />}
