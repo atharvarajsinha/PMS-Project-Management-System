@@ -7,7 +7,7 @@ import PageHeader from "@/components/common/PageHeader";
 import ClassSectionCard from "@/features/faculty-portal/components/ClassSectionCard";
 import { getFacultyDashboard } from "@/features/faculty-portal/api";
 
-// Sections where I'm class teacher (usually one per semester). Uses the dashboard payload,
+// Sections where I'm class coordinator (usually one per semester). Uses the dashboard payload,
 // which already carries per-section student and inactive counts.
 export default function ClassesPage() {
   const query = useQuery({ queryKey: ["my", "dashboard"], queryFn: getFacultyDashboard });
@@ -15,7 +15,7 @@ export default function ClassesPage() {
 
   return (
     <>
-      <PageHeader title="My classes" description="Sections where you are the class teacher. Open one to manage its students." />
+      <PageHeader title="My classes" description="Sections where you are the class coordinator. Open one to manage its students." />
       {query.error ? (
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : query.isLoading ? (
@@ -42,8 +42,8 @@ export default function ClassesPage() {
         <div className="rounded-lg border">
           <EmptyState
             icon={LayoutGrid}
-            title="You're not a class teacher yet"
-            description="When your admin makes you class teacher of a section, it appears here and you can manage its students."
+            title="You're not a class coordinator yet"
+            description="When your admin makes you class coordinator of a section, it appears here and you can manage its students."
           />
         </div>
       )}

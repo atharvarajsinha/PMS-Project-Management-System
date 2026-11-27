@@ -1,7 +1,7 @@
 """Faculty portal for Phase 2.
 
 - /my/mentoring/ — mentor requests to accept/reject, and the teams I mentor.
-- /my/class-sections/{id}/teams/ — class teacher: each student of my section,
+- /my/class-sections/{id}/teams/ — class coordinator: each student of my section,
   their team per subject, its mentor(s) and the evaluator per phase.
 - /my/class-sections/{id}/teams/{student}/ — one student in detail, including their marks per phase.
 """

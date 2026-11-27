@@ -24,8 +24,8 @@ import { usePagedList } from "@/hooks/usePagedList";
 import { useSelection } from "@/hooks/useSelection";
 
 const CT_FILTER = [
-  { value: "true", label: "Has class teacher" },
-  { value: "false", label: "No class teacher" },
+  { value: "true", label: "Has class coordinator" },
+  { value: "false", label: "No class coordinator" },
 ];
 
 export default function SectionsPage() {
@@ -38,7 +38,7 @@ export default function SectionsPage() {
 
   const query = usePagedList(["sections", "list"], listSections, params, setParam);
   const remove = useApiMutation((s) => deleteSection(s.id), { invalidate: sectionInvalidate, success: "Section deleted" });
-  const clearCt = useApiMutation((s) => clearClassTeacher(s.id), { invalidate: sectionInvalidate, success: "Class teacher removed" });
+  const clearCt = useApiMutation((s) => clearClassTeacher(s.id), { invalidate: sectionInvalidate, success: "Class coordinator removed" });
 
   const label = (s) => `Semester ${s.semester.semester_number} · Section ${s.name}`;
   const selection = useSelection();
@@ -48,8 +48,8 @@ export default function SectionsPage() {
     <RowActions
       label={`Actions for ${label(s)}`}
       items={[
-        { label: s.class_teacher ? "Change class teacher" : "Assign class teacher", icon: UserCheck, onSelect: () => setCtSection(s) },
-        { label: "Remove class teacher", icon: UserMinus, hidden: !s.class_teacher, onSelect: () => setConfirm({ type: "clear-ct", section: s }) },
+        { label: s.class_teacher ? "Change class coordinator" : "Assign class coordinator", icon: UserCheck, onSelect: () => setCtSection(s) },
+        { label: "Remove class coordinator", icon: UserMinus, hidden: !s.class_teacher, onSelect: () => setConfirm({ type: "clear-ct", section: s }) },
         { label: "View students", icon: Users, onSelect: () => navigate(`/admin/students?semester_id=${s.semester.id}&section_id=${s.id}`) },
         { label: "Rename", icon: Pencil, onSelect: () => setForm({ open: true, section: s }) },
         "separator",
@@ -95,7 +95,7 @@ export default function SectionsPage() {
     select,
     { key: "sem", header: "Semester", className: "w-24 tabular-nums", cell: (s) => s.semester.semester_number },
     { key: "name", header: "Section", className: "w-24", cell: (s) => <span className="font-medium">{s.name}</span> },
-    { key: "ct", header: "Class teacher", cell: teacher },
+    { key: "ct", header: "Class coordinator", cell: teacher },
     { key: "students", header: "Students", className: "tabular-nums", cell: (s) => s.students_count },
     { key: "subjects", header: "Subjects", cell: subjects },
     { key: "actions", header: <span className="sr-only">Actions</span>, className: "w-12 text-right", cell: actions },
@@ -112,7 +112,7 @@ export default function SectionsPage() {
       </div>
       <CardFields
         fields={[
-          ["Class teacher", s.class_teacher?.name || "Not assigned"],
+          ["Class coordinator", s.class_teacher?.name || "Not assigned"],
           ["Students", s.students_count],
         ]}
       />
@@ -126,8 +126,8 @@ export default function SectionsPage() {
   return (
     <>
       <PageHeader
-        title="Sections & Class Teachers"
-        description="Sections belong to a semester. Each can have one class teacher. Subjects in amber have no faculty yet."
+        title="Sections & Class Coordinators"
+        description="Sections belong to a semester. Each can have one class coordinator. Subjects in amber have no faculty yet."
         actions={
           <>
             <ImportButton kind="sections" />
@@ -141,11 +141,11 @@ export default function SectionsPage() {
         <SearchInput value={params.search} onChange={(v) => setParam("search", v)} placeholder="Search section name…" />
         <FilterSelect label="Semester" value={params.semester_id} onChange={(v) => setParam("semester_id", v)} options={semesters.options} loading={semesters.isLoading} emptyText="No semesters yet — create one under Semesters" allLabel="All semesters" />
         <FilterSelect
-          label="Class teacher"
+          label="Class coordinator"
           value={params.has_class_teacher}
           onChange={(v) => setParam("has_class_teacher", v)}
           options={CT_FILTER}
-          allLabel="Any class teacher"
+          allLabel="Any class coordinator"
           className="sm:w-48"
         />
       </Toolbar>
@@ -155,7 +155,7 @@ export default function SectionsPage() {
           noun={selection.count === 1 ? "section" : "sections"}
           mutationFn={bulkDeleteSections}
           invalidate={sectionInvalidate}
-          description="Their subject mappings and class-teacher assignments are removed too. Sections that still have students are skipped."
+          description="Their subject mappings and class coordinator assignments are removed too. Sections that still have students are skipped."
         />
       </BulkBar>
       <DataView
@@ -185,8 +185,8 @@ export default function SectionsPage() {
       <ConfirmDialog
         open={confirm?.type === "clear-ct"}
         onOpenChange={() => setConfirm(null)}
-        title={`Remove class teacher of ${cs ? label(cs) : ""}?`}
-        description={`${cs?.class_teacher?.name} will no longer be class teacher of this section.`}
+        title={`Remove class coordinator of ${cs ? label(cs) : ""}?`}
+        description={`${cs?.class_teacher?.name} will no longer be class coordinator of this section.`}
         confirmLabel="Remove"
         onConfirm={() => clearCt.mutateAsync(cs)}
       />

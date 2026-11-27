@@ -27,7 +27,7 @@ export default function TeachingPage() {
     { key: "sem", header: "Semester", className: "w-24 tabular-nums", cell: (t) => t.semester.semester_number },
     { key: "section", header: "Section", className: "w-24", cell: (t) => <span className="font-medium">{t.section.name}</span> },
     { key: "subject", header: "Subject", cell: (t) => <Link to={open(t)} className="hover:underline">{subject(t)}</Link> },
-    { key: "ct", header: "Class teacher", cell: (t) => t.class_teacher?.name || <span className="text-muted-foreground">—</span> },
+    { key: "ct", header: "Class coordinator", cell: (t) => t.class_teacher?.name || <span className="text-muted-foreground">—</span> },
     { key: "students", header: "Students", className: "w-24 tabular-nums", cell: (t) => t.students_count },
     {
       key: "open",

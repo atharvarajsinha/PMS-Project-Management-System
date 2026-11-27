@@ -95,9 +95,9 @@ class ImportTests(PMSTestCase):
         )
         rows = self.upload("sections", text).json()["rows"]
         self.assertEqual([r["status"] for r in rows], ["created", "skipped", "error", "error"])
-        self.assertIn("already class teacher", rows[2]["errors"]["class_teacher_email"])
+        self.assertIn("already class coordinator", rows[2]["errors"]["class_teacher_email"])
         self.assertEqual(Section.objects.get(name="A").class_teacher, x)
-        # existing section: change class teacher
+        # existing section: change class coordinator
         rows = self.upload("sections", "semester,section,class_teacher_email\n7,B,x@x.edu\n").json()["rows"]
         self.assertEqual(rows[0]["status"], "error")  # x already teaches A in this semester
 

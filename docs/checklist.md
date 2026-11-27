@@ -38,14 +38,14 @@ Legend: `[x]` done · `[~]` partial / not verified · `[ ]` not started
 - [x] Students: same as faculty, section-within-semester validation, roll number unique per college
 - [x] Semesters (1–12, unique per college)
 - [x] Subjects (code unique per college)
-- [x] Sections (name unique per semester) + class teacher assign/remove (one per semester per faculty)
+- [x] Sections (name unique per semester) + class coordinator assign/remove (one per semester per faculty)
 - [x] Semester-subject offerings
 - [x] Section-subject mappings (incl. bulk map) + faculty assignment per section-subject
 - [x] Search / filters / pagination on lists
 - [x] Frontend: Faculty, Students, Semesters, Subjects, Sections, Mapping pages
 - [x] Subject Mapping redesigned: one **By semester** grid (subjects × sections, faculty picked in each cell, "+ Map", map to all sections, add subject to semester) + an **All mappings** list
 - [x] Bulk delete (`POST {list}/bulk-delete/`) on faculty, students, semesters, subjects, sections, offerings, mappings — blocked rows are skipped with a reason
-- [x] **CSV imports** (pulled forward from Phase 3): faculty, semesters, subjects, sections & class teachers, students, subject mappings — template download, dry-run preview, partial import of valid rows, error-rows CSV; *Import Data* page + "Import CSV" on each list page
+- [x] **CSV imports** (pulled forward from Phase 3): faculty, semesters, subjects, sections & class coordinators, students, subject mappings — template download, dry-run preview, partial import of valid rows, error-rows CSV; *Import Data* page + "Import CSV" on each list page
 
 ### 6. College configuration
 - [x] `GET/PATCH /settings/` — min/max team size, default mentor capacity, team formation, global team lock, cross-section evaluation (DB check constraints)
@@ -57,7 +57,7 @@ Legend: `[x]` done · `[~]` partial / not verified · `[ ]` not started
 ### 8. Dashboards & faculty portal (pulled into Phase 1)
 - [x] `GET /dashboard/` — College Admin counts + pending-setup items
 - [x] `GET /my/dashboard/` — faculty dashboard
-- [x] `/my/class-sections/` — class teacher manages own section's students (no delete / no section move)
+- [x] `/my/class-sections/` — class coordinator manages own section's students (no delete / no section move)
 - [x] `/my/teaching/` — read-only teaching assignments with students
 - [x] Frontend: Admin dashboard, Faculty dashboard, My Classes, Class Section, Teaching, Teaching detail
 
@@ -104,7 +104,7 @@ Apps: `projects` (phases, submissions), `teams` (mentor lists, teams, invites, m
 - [x] Team naming by any evaluator of the team (or Admin), unique per subject
 - [x] Job endpoint also syncs phase statuses / auto-lock
 - [x] Guards: Team Lead can't be deleted (RESTRICT + clear 409); a student in a team can't be moved to a section that doesn't take that subject
-- [x] **Add-on:** class teacher sees each student of their section × subject → team, role, mentor(s), evaluator per phase (`/my/class-sections/{id}/teams/`)
+- [x] **Add-on:** class coordinator sees each student of their section × subject → team, role, mentor(s), evaluator per phase (`/my/class-sections/{id}/teams/`)
 - [x] `TIME_ZONE` setting (default `Asia/Kolkata`) so "today" for phase dates is the college's day
 - [x] 52 new tests (121 total)
 
@@ -127,7 +127,7 @@ Apps: `projects` (phases, submissions), `teams` (mentor lists, teams, invites, m
 - [x] Team delete removes members, invites, mentor requests, submissions + links, evaluator assignments, evaluations and per-student marks (database cascade; covered by a test)
 - [x] Marks inputs masked like passwords (frontend only, show/hide eye, digits only, ignored by password managers)
 - [x] Invite history for the Team Lead (accepted / declined / cancelled, incl. "joined another team")
-- [x] Class teacher: "Details & marks" modal per student — evaluator and that student's marks for every phase, totals per subject
+- [x] Class coordinator: "Details & marks" modal per student — evaluator and that student's marks for every phase, totals per subject
 - [x] Student project card: "Submission: start–end · Pending/Submitted" and "Evaluation: end+1 – evaluation end · Pending/Completed" (new central choices `SubmissionProgress`, `EvaluationProgress`)
 - [x] 133 backend tests passing
 

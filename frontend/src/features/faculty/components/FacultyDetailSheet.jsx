@@ -54,7 +54,7 @@ export default function FacultyDetailSheet({ facultyId, onOpenChange }) {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Not a class teacher.</p>
+                <p className="text-sm text-muted-foreground">Not a class coordinator.</p>
               )}
             </section>
             <section>

@@ -325,7 +325,7 @@ The icon set is **lucide-react**. Import icons individually so they tree-shake: 
 | Subjects | `BookOpen` |
 | Sections | `LayoutGrid` |
 | Subject mapping | `Network` |
-| Class teacher | `UserCheck` |
+| Class coordinator | `UserCheck` |
 | Settings | `Settings` |
 | Profile | `UserRound` |
 | Logout | `LogOut` |
@@ -550,7 +550,7 @@ The header has a **college switcher** (`Command` combobox, `ArrowLeftRight` icon
 | Students | `/admin/students` | `Users` |
 | Semesters | `/admin/semesters` | `CalendarRange` |
 | Subjects | `/admin/subjects` | `BookOpen` |
-| Sections & Class Teachers | `/admin/sections` | `LayoutGrid` |
+| Sections & Class Coordinators | `/admin/sections` | `LayoutGrid` |
 | Subject Mapping | `/admin/mapping` | `Network` (tabs: Semester subjects · Section subjects · Faculty assignment) |
 | Settings | `/admin/settings` | `Settings` (team size, mentor capacity, team formation, team lock, cross-section evaluation) |
 | Profile | `/profile` | `UserRound` |

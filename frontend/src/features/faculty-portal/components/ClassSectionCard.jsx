@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import ClassMarksDialog from "@/features/faculty-portal/components/ClassMarksDialog";
 import { sectionLabel } from "@/features/faculty-portal/components/PortalBits";
 
-// Card for a section where the faculty member is class teacher: opens the section, or its marks.
+// Card for a section where the faculty member is class coordinator: opens the section, or its marks.
 export default function ClassSectionCard({ sectionId, semesterNumber, sectionName, studentsCount, inactiveCount, subjectsCount }) {
   const [marksOpen, setMarksOpen] = useState(false);
   return (
@@ -13,7 +13,7 @@ export default function ClassSectionCard({ sectionId, semesterNumber, sectionNam
       <Link to={`/faculty/classes/${sectionId}`} className="group flex flex-col gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Class teacher</p>
+            <p className="text-xs text-muted-foreground">Class coordinator</p>
             <p className="truncate font-semibold">{sectionLabel(semesterNumber, sectionName)}</p>
           </div>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />

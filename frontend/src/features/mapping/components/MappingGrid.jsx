@@ -171,7 +171,7 @@ export default function MappingGrid({ semesterId: selected, onSemesterChange }) 
           <Loader2 className="size-6 animate-spin text-muted-foreground" aria-label="Loading" />
         </div>
       ) : !sections.sections.length ? (
-        <EmptyState icon={Network} title={`Semester ${semester?.semester_number ?? ""} has no sections`} description="Create sections under Sections & Class Teachers, then map subjects to them here." />
+        <EmptyState icon={Network} title={`Semester ${semester?.semester_number ?? ""} has no sections`} description="Create sections under Sections & Class Coordinators, then map subjects to them here." />
       ) : !offerings.length ? (
         <EmptyState icon={Network} title="No subjects in this semester" description="Use “Add subject to semester” above, then map it to sections and pick who teaches each." />
       ) : (

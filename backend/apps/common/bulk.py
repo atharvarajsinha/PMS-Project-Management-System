@@ -19,7 +19,7 @@ class BulkDeleteMixin:
     @extend_schema(request=BulkIdsSerializer, responses={200: dict})
     @action(detail=False, methods=["post"], url_path="bulk-delete")
     def bulk_delete(self, request, **kwargs):
-        if "delete" not in self.http_method_names:  # e.g. class teachers can't delete students
+        if "delete" not in self.http_method_names:  # e.g. class coordinators can't delete students
             raise MethodNotAllowed("POST")
         serializer = BulkIdsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

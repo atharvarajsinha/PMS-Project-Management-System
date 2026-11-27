@@ -50,7 +50,7 @@ const FILTERS = [
   { value: "with", label: "In a team" },
 ];
 
-// Class teacher add-on: where every student of my section stands, per subject.
+// Class coordinator add-on: where every student of my section stands, per subject.
 export default function ClassSectionTeamsPage() {
   const { sectionId } = useParams();
   const isDesktop = useIsDesktop();

@@ -3,7 +3,7 @@ import { get, patch, post } from "@/lib/api";
 // Faculty portal (/my/...): the logged-in faculty member's own data (API.md "Faculty portal")
 export const getFacultyDashboard = () => get("/my/dashboard/");
 
-// Sections where I am the class teacher
+// Sections where I am the class coordinator
 export const listClassSections = (params) => get("/my/class-sections/", params);
 export const getClassSection = (id) => get(`/my/class-sections/${id}/`);
 

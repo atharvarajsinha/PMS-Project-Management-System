@@ -296,7 +296,7 @@ class StudentBulkSerializer(serializers.Serializer):
 
 
 class ClassStudentSerializer(StudentSerializer):
-    """Student as managed by their class teacher: the section is fixed to the teacher's section."""
+    """Student as managed by their class coordinator: the section is fixed to the teacher's section."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -20,7 +20,7 @@ Once the backend exists, the live, generated version is at `/api/docs/` (Swagger
 12. [Students](#12-students)
 13. [Semesters](#13-semesters)
 14. [Subjects](#14-subjects)
-15. [Sections & class teachers](#15-sections--class-teachers)
+15. [Sections & class coordinators](#15-sections--class-teachers)
 16. [Semester subjects (offerings)](#16-semester-subjects-offerings)
 17. [Section subjects & faculty assignment](#17-section-subjects--faculty-assignment)
 18. [Dashboards](#18-dashboards)
@@ -653,7 +653,7 @@ All Admin / Super Admin.
 
 ---
 
-## 15. Sections & class teachers
+## 15. Sections & class coordinators
 
 All Admin / Super Admin.
 
@@ -667,7 +667,7 @@ Query: `semester_id`, `search` (name), `has_class_teacher` (`true`/`false`), `or
 - `name`: 1–100 chars, trimmed, stored upper-case, unique within the semester.
 - `class_teacher_id` is a **faculty id**, optional.
 
-→ `201 Section`. Errors: `409 CONFLICT` (name exists in semester / faculty already class teacher in this semester).
+→ `201 Section`. Errors: `409 CONFLICT` (name exists in semester / faculty already class coordinator in this semester).
 
 ### `GET /sections/{id}/` → `200 Section`
 
@@ -677,10 +677,10 @@ Query: `semester_id`, `search` (name), `has_class_teacher` (`true`/`false`), `or
 ### `DELETE /sections/{id}/`
 → `204` · `409 HAS_DEPENDENTS` if students are still in it (move or delete them first). Removes its subject mappings.
 
-### Class teacher
+### Class coordinator
 | Method & path | Body | Result |
 |---|---|---|
-| `PUT /sections/{id}/class-teacher/` | `{ "faculty_id": 1 }` | `200 Section` · `409 CONFLICT` if that faculty is already class teacher of another section **in the same semester** (`message` names that section). Inactive faculty can be assigned (setup usually happens before accounts are activated). |
+| `PUT /sections/{id}/class-teacher/` | `{ "faculty_id": 1 }` | `200 Section` · `409 CONFLICT` if that faculty is already class coordinator of another section **in the same semester** (`message` names that section). Inactive faculty can be assigned (setup usually happens before accounts are activated). |
 | `DELETE /sections/{id}/class-teacher/` | — | `200 Section` (unassigned) |
 
 ---
@@ -797,13 +797,13 @@ The logged-in faculty member's own work:
 
 All require role `FACULTY` and only ever return the caller's own data; anything else is `404 NOT_FOUND`.
 
-### Class teacher — my sections
+### Class coordinator — my sections
 | Method & path | Result |
 |---|---|
-| `GET /my/class-sections/` | paginated `Section` — sections where I am class teacher |
+| `GET /my/class-sections/` | paginated `Section` — sections where I am class coordinator |
 | `GET /my/class-sections/{id}/` | `200 Section` (with `students_count` and `subjects`) |
 
-### Class teacher — students of my section
+### Class coordinator — students of my section
 Base: `/my/class-sections/{section_id}/students/`. Same `Student` object and errors as §12, but:
 - the section is fixed to `{section_id}` (no `section_id` in the body; it cannot be changed),
 - **no delete** (`405`): deleting and moving students stays with the College Admin.
@@ -882,7 +882,7 @@ Each id is deleted on its own (same rules and audit record as the single `DELETE
 | `NOT_FOUND` | id doesn't exist in this college |
 | `HAS_DEPENDENTS` | e.g. a section (or a semester whose sections) still has students |
 
-Class teachers can't use it on `/my/class-sections/{id}/students/` (`405`).
+Class coordinators can't use it on `/my/class-sections/{id}/students/` (`405`).
 
 ---
 
@@ -904,7 +904,7 @@ Kinds (import in this order — each only refers to data from the ones before it
 | `faculty` | `name*`, `email*`, `phone` | Created `INACTIVE`; activate to email credentials |
 | `semesters` | `semester_number*` | 1–12; `7`, `Sem 7` and `Semester 7` all work |
 | `subjects` | `code*`, `name*` | Code is upper-cased |
-| `sections` | `semester*`, `section*`, `class_teacher_email` | Existing section + email → assigns/changes the class teacher (`updated`); without email → `skipped` |
+| `sections` | `semester*`, `section*`, `class_teacher_email` | Existing section + email → assigns/changes the class coordinator (`updated`); without email → `skipped` |
 | `students` | `name*`, `email*`, `roll_number*`, `semester*`, `section*`, `phone` | Section must exist in that semester; created `INACTIVE` |
 | `subject-mappings` | `semester*`, `subject_code*`, `section*`, `faculty_email` | Offers the subject in the semester if needed; existing mapping + email → changes the faculty (`updated`) |
 
@@ -1016,8 +1016,8 @@ Students change teams only while `team_formation_enabled` is on and `teams_locke
 | GET | `/my/evaluations/` · `/my/evaluations/phases/` | teams I evaluate; phase picker with progress counts |
 | PUT | `/my/evaluations/{id}/marks/` | `{default_marks?, student_marks?: [{student_id, marks}], remarks?, submit=true}` — marks are **per student**: `default_marks` applies to every member not listed in `student_marks`; every member must end up with 0..max; CLOSED only; no submission ⇒ all 0. Response `evaluation`: `{default_marks, student_marks[{student_id, name, roll_number, marks}], summary{min,max,avg}, …}` |
 | POST | `/my/evaluations/{id}/team-name/` | `{name}` (unique per subject) |
-| GET | `/my/class-sections/{id}/teams/{student_id}/` | class teacher: one student — per subject `team`, `phases[{…, evaluator, marks, evaluation_status, remarks, submission_progress, evaluation_progress}]`, `totals{marks, max_marks}` |
-| GET | `/my/class-sections/{id}/teams/` | class teacher: every student × subject → team, role, mentors, evaluator per phase |
+| GET | `/my/class-sections/{id}/teams/{student_id}/` | class coordinator: one student — per subject `team`, `phases[{…, evaluator, marks, evaluation_status, remarks, submission_progress, evaluation_progress}]`, `totals{marks, max_marks}` |
+| GET | `/my/class-sections/{id}/teams/` | class coordinator: every student × subject → team, role, mentors, evaluator per phase |
 
 ### Enforced by the database
 One team per student per subject, one pending invite per team + student, one active mentor assignment per

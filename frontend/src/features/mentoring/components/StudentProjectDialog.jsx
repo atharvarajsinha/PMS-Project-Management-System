@@ -83,7 +83,7 @@ function SubjectBlock({ item }) {
   );
 }
 
-/** Class teacher: one student's teams, evaluators and marks for every phase of every subject. */
+/** Class coordinator: one student's teams, evaluators and marks for every phase of every subject. */
 export default function StudentProjectDialog({ sectionId, student, onOpenChange }) {
   const query = useQuery({
     queryKey: ["my", "class-student-project", sectionId, student?.id],
@@ -95,7 +95,7 @@ export default function StudentProjectDialog({ sectionId, student, onOpenChange 
       open={!!student}
       onOpenChange={onOpenChange}
       title={student ? `${student.name} · ${student.roll_number}` : "Student"}
-      description="Teams, evaluators and marks for every phase. Marks are visible to you as class teacher, not to students."
+      description="Teams, evaluators and marks for every phase. Marks are visible to you as class coordinator, not to students."
       className="sm:max-w-3xl"
     >
       {query.error && <ErrorState error={query.error} onRetry={query.refetch} />}

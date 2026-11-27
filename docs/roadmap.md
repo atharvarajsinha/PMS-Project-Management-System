@@ -12,7 +12,7 @@ backend/
 │   ├── common/        shared services used by every app (see below)
 │   ├── colleges/      colleges, college settings, College Admin creation (Super Admin)
 │   ├── accounts/      users, auth, profile, faculty & student management
-│   └── academics/     semesters, subjects, sections, class teachers, subject mappings, faculty assignment
+│   └── academics/     semesters, subjects, sections, class coordinators, subject mappings, faculty assignment
 │   # Phase 2: teams/, projects/ (phases, submissions), evaluations/
 │   # Phase 3: notifications/, imports/, reports/, promotions/, dashboards/
 ├── requirements.txt
@@ -42,7 +42,7 @@ backend/
 5. **College Admin academic CRUD**
    - Faculty: create, update, activate (emails credentials), deactivate, hard delete
    - Students: create, update, activate, deactivate, hard delete (section within semester)
-   - Semesters, subjects, sections, class teacher assignment
+   - Semesters, subjects, sections, class coordinator assignment
    - Semester-subject offerings, section-subject mappings, faculty assignment per section-subject
 6. **College configuration** — `GET/PATCH` college settings: min/max team size, default mentor capacity, team formation on/off, global team lock, cross-section evaluation
 7. **Audit logging** on all of the above

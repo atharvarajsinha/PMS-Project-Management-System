@@ -21,7 +21,7 @@
 3. [Platform & Tenancy Model](#3-platform--tenancy-model)
 4. [User Roles](#4-user-roles)
 5. [Academic Structure](#5-academic-structure)
-6. [Class Teacher Assignment](#6-class-teacher-assignment)
+6. [Class Coordinator Assignment](#6-class-teacher-assignment)
 7. [Account Management](#7-account-management)
 8. [Authentication & Security](#8-authentication--security)
 9. [College Settings](#9-college-settings)
@@ -107,7 +107,7 @@ Faculty work as **Mentors** and **Evaluators**; students work as **Team Leads** 
 Exactly one per college. System-wide control within the college. Can:
 - Add faculty and students; activate/deactivate accounts; hard delete users.
 - Manage semesters and subjects.
-- Create semester-specific sections; assign exactly one Class Teacher per section; change or remove Class Teacher assignments.
+- Create semester-specific sections; assign exactly one Class Coordinator per section; change or remove Class Coordinator assignments.
 - Assign students to sections.
 - Offer subjects in semesters; map subjects to sections; assign faculty to section-subjects.
 - Define the **mentor list per semester** and mentor capacities.
@@ -149,7 +149,7 @@ A student belongs to one current semester and one section in it. A student can b
 ```
 College
  ├── Semester (reused for every batch; no academic year)
- │    ├── Sections (A, B, C… — names unique within the semester; one Class Teacher each)
+ │    ├── Sections (A, B, C… — names unique within the semester; one Class Coordinator each)
  │    │     └── Students (exactly one current section)
  │    └── Semester-Subjects (subjects offered in the semester — every subject is a project subject)
  │          ├── Section-Subjects (which sections take it) → exactly one Faculty each
@@ -181,12 +181,12 @@ College
 - Only Section B students form **AI/ML teams**.
 - A Section A student is therefore in one DAA team and one DSA team; a Section B student is in one DSA team and one AI/ML team.
 
-## 6. Class Teacher Assignment
-- Every semester-section must have exactly one Class Teacher before the semester's required workflow begins (a section may be created first and assigned later).
-- Any faculty member of the college can be Class Teacher; it is independent of teaching assignments.
-- A faculty member may be Class Teacher of several sections in **different** semesters, but at most one section in the **same** semester.
+## 6. Class Coordinator Assignment
+- Every semester-section must have exactly one Class Coordinator before the semester's required workflow begins (a section may be created first and assigned later).
+- Any faculty member of the college can be Class Coordinator; it is independent of teaching assignments.
+- A faculty member may be Class Coordinator of several sections in **different** semesters, but at most one section in the **same** semester.
 - Assignment is per semester-section record and never carries over to another semester.
-- Managed by the Admin. If the faculty member is deleted, the section's Class Teacher becomes empty.
+- Managed by the Admin. If the faculty member is deleted, the section's Class Coordinator becomes empty.
 
 ## 7. Account Management
 ### 7.1 Common user fields
@@ -345,7 +345,7 @@ Notifications are sent immediately (email delivery via the outbox job) and can i
 ### 20.2 Semester-end reset
 Semesters are reused for every batch (no academic year). After the Admin downloads all data:
 - **Wiped:** teams, team members, mentor assignments, evaluator assignments, submissions, links, evaluations/marks.
-- **Kept:** semesters, subjects, sections, class teachers, subject mappings, faculty assignments, phases (dates edited for the next batch), mentor lists.
+- **Kept:** semesters, subjects, sections, class coordinators, subject mappings, faculty assignments, phases (dates edited for the next batch), mentor lists.
 
 ## 21. Hard Delete
 - No soft deletes anywhere.
@@ -356,23 +356,23 @@ Semesters are reused for every batch (no academic year). After the Admin downloa
   - References to "who did it" (assigned by, created by, promoted by, locked by, audit actor) become **empty (SET NULL)** instead of deleting history.
   - Deleting a submitting student does not delete the team's submission.
   - Promotion history keeps snapshot information if old semesters/sections are deleted.
-  - Deleting a faculty member empties their Class Teacher and section-subject assignments.
+  - Deleting a faculty member empties their Class Coordinator and section-subject assignments.
 
 ## 22. Bulk CSV Operations
-Supported: students, faculty, semesters, subjects, sections, section-subject mappings, faculty assignments, Class Teacher assignments.
+Supported: students, faculty, semesters, subjects, sections, section-subject mappings, faculty assignments, Class Coordinator assignments.
 
 Workflow: **Download template → Prepare CSV → Upload → Validate → Preview → Import → Results**.
 
 - **Partial import:** valid rows are imported, invalid rows are reported.
 - Validation, duplicate detection, success/failure counts, row-level errors, downloadable error CSV.
 - Student rows include semester and section; sections are validated against the semester.
-- Faculty assignments are per section + subject; Class Teacher rows per semester + section with an existing faculty.
+- Faculty assignments are per section + subject; Class Coordinator rows per semester + section with an existing faculty.
 - No dedicated import tracking tables; import actions are recorded in audit logs.
 
 ## 23. Reports
 Downloadable, generated from relational data:
 - **Students:** lists, semester breakdowns, section breakdowns, promotion data.
-- **Faculty:** lists, teaching assignments, Class Teacher assignments, mentoring assignments, evaluation assignments.
+- **Faculty:** lists, teaching assignments, Class Coordinator assignments, mentoring assignments, evaluation assignments.
 - **Teams:** lists, members, Team Leads, members' sections, mentors, evaluators.
 - **Phases & evaluation:** phase status, pending evaluations, evaluator marks, audit information.
 - **Bulk imports:** summaries, failed records, validation errors.
@@ -380,8 +380,8 @@ Downloadable, generated from relational data:
 ## 24. Dashboards
 UI views only; no dashboard tables.
 - **Super Admin:** colleges, college status, user counts per college, platform activity.
-- **College Admin:** students, faculty, semesters, subjects, sections, Class Teacher coverage, active teams, mentors, phase statuses, pending evaluations, recent audit logs.
-- **Faculty:** Class Teacher sections, teaching section-subjects, mentoring teams, evaluation teams, submission counts, pending evaluations.
+- **College Admin:** students, faculty, semesters, subjects, sections, Class Coordinator coverage, active teams, mentors, phase statuses, pending evaluations, recent audit logs.
+- **Faculty:** Class Coordinator sections, teaching section-subjects, mentoring teams, evaluation teams, submission counts, pending evaluations.
 - **Student:** current semester and section, teams per subject, mentors, evaluators, phase deadlines, submission status.
 
 ## 25. Audit Logs
@@ -422,11 +422,11 @@ Tracked: user operations, college operations (Super Admin), hard deletes, team l
 | 21 | Each section-subject has exactly one assigned faculty member. |
 | 22 | The same subject can have different faculty in different sections. |
 | 23 | A faculty member can teach multiple section-subjects. |
-| 24 | Every section must have exactly one Class Teacher before the workflow begins. |
-| 25 | A Class Teacher can be any faculty and need not teach in that section. |
-| 26 | A faculty member is Class Teacher of at most one section per semester. |
-| 27 | Class Teacher assignments do not carry over between semesters. |
-| 28 | The Admin manages Class Teacher assignments. |
+| 24 | Every section must have exactly one Class Coordinator before the workflow begins. |
+| 25 | A Class Coordinator can be any faculty and need not teach in that section. |
+| 26 | A faculty member is Class Coordinator of at most one section per semester. |
+| 27 | Class Coordinator assignments do not carry over between semesters. |
+| 28 | The Admin manages Class Coordinator assignments. |
 | 29 | College settings (team size, mentor capacity, team formation, team lock, cross-section evaluation) are college-wide and set by the Admin. |
 | 30 | Teams are per semester-subject. |
 | 31 | Only students of sections mapped to a semester-subject can join its teams. |
@@ -482,7 +482,7 @@ Super Admin creates College + College Admin
 → College Admin activated (credentials emailed)
 → Admin configures college settings
 → Create semesters & subjects
-→ Create semester-specific sections + assign Class Teachers
+→ Create semester-specific sections + assign Class Coordinators
 → Add faculty & students (activate → credentials emailed)
 → Offer subjects in semesters → map subjects to sections → assign faculty
 → Create phases per semester-subject
@@ -563,7 +563,7 @@ backend/
     │              email service + EmailOutbox, password/OTP utils, job endpoints, error format, health
     ├── colleges/  colleges, college settings, College Admin management (Super Admin)
     ├── accounts/  users, auth, profile, faculty & student management
-    └── academics/ semesters, subjects, sections, class teachers, subject mappings, faculty assignment
+    └── academics/ semesters, subjects, sections, class coordinators, subject mappings, faculty assignment
     # Phase 2: teams/, projects/ (phases, submissions), evaluations/
     # Phase 3: notifications/, imports/, reports/, promotions/, dashboards/
 ```
@@ -574,7 +574,7 @@ backend/
 2. **Super Admin bootstrap** — created/ensured from env vars on every server start (idempotent, after `migrate`).
 3. **Super Admin APIs** — CRUD colleges (with default settings); create/update/activate/deactivate/delete College Admin; view & manage any college.
 4. **Common profile service** — `GET/PATCH /api/v1/me/`, change password.
-5. **College Admin academic CRUD** — faculty, students, semesters, subjects, sections, class teachers, semester-subject offerings, section-subject mappings, faculty assignment.
+5. **College Admin academic CRUD** — faculty, students, semesters, subjects, sections, class coordinators, semester-subject offerings, section-subject mappings, faculty assignment.
 6. **College configuration** — `GET/PATCH` college settings.
 7. **Audit logging** on all of the above.
 

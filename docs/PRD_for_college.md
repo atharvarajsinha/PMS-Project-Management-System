@@ -14,7 +14,7 @@
 2. [Objectives](#2-objectives)
 3. [User Roles](#3-user-roles)
 4. [Academic Structure](#4-academic-structure)
-5. [Class Teacher Assignment](#5-class-teacher-assignment)
+5. [Class Coordinator Assignment](#5-class-teacher-assignment)
 6. [Account Management](#6-account-management)
 7. [Authentication](#7-authentication)
 8. [Admin Configuration](#8-admin-configuration)
@@ -74,7 +74,7 @@ The college has exactly one Admin, who has control over the whole system. The Ad
 - Add, update, activate, deactivate and hard delete students and faculty.
 - Manage semesters and subjects.
 - Create sections within each semester.
-- Assign exactly one Class Teacher to each section, and change or remove that assignment.
+- Assign exactly one Class Coordinator to each section, and change or remove that assignment.
 - Assign students to sections.
 - Map subjects to the sections that take them.
 - Assign one faculty member to each section-subject.
@@ -167,19 +167,19 @@ A student in Section A belongs to Section A for the whole semester. They don't h
 
 Semester 7 Section A and Semester 8 Section A are different section records. Section names are unique within a semester, not across the college.
 
-## 5. Class Teacher Assignment
+## 5. Class Coordinator Assignment
 
-Each section in a semester must have exactly one Class Teacher.
+Each section in a semester must have exactly one Class Coordinator.
 
-- Any faculty member can be a Class Teacher.
+- Any faculty member can be a Class Coordinator.
 - The assignment is for a specific semester and section.
-- A faculty member can be Class Teacher of sections in different semesters, but of at most one section within the same semester.
-- Being Class Teacher doesn't depend on teaching any subject in that section.
-- The Admin assigns and manages Class Teachers.
+- A faculty member can be Class Coordinator of sections in different semesters, but of at most one section within the same semester.
+- Being Class Coordinator doesn't depend on teaching any subject in that section.
+- The Admin assigns and manages Class Coordinators.
 - An assignment doesn't carry over to another semester, even when the section names match.
-- A section can be created before its Class Teacher is assigned, but must have one before the semester's academic workflow begins.
+- A section can be created before its Class Coordinator is assigned, but must have one before the semester's academic workflow begins.
 
-| Semester | Section | Class Teacher |
+| Semester | Section | Class Coordinator |
 |---|---|---|
 | Semester 7 | A | Faculty X |
 | Semester 7 | B | Faculty Y |
@@ -415,7 +415,7 @@ Creation and addition operations can be done in bulk by CSV for:
 - Sections
 - Section-subject mappings
 - Faculty assignments
-- Class Teacher assignments
+- Class Coordinator assignments
 
 **Workflow:**
 ```
@@ -434,23 +434,23 @@ The system provides:
 - Student rows include the student's semester and section.
 - Sections are created within a specific semester.
 - Faculty assignments are made per section + subject.
-- Class Teacher rows give a semester, a section and a faculty member. The import checks that the section belongs to that semester and that the faculty member exists.
+- Class Coordinator rows give a semester, a section and a faculty member. The import checks that the section belongs to that semester and that the faculty member exists.
 
 ## 22. Reports
 
 All reports are downloadable.
 
 - **Students:** student lists, semester breakdowns, section breakdowns, promotion data
-- **Faculty:** faculty lists, teaching assignments, Class Teacher assignments, mentoring assignments, evaluation assignments
+- **Faculty:** faculty lists, teaching assignments, Class Coordinator assignments, mentoring assignments, evaluation assignments
 - **Teams:** team lists, members, Team Leads, members' sections, mentors, evaluators
 - **Phases & Evaluation:** phase status, pending evaluations, evaluator marks, audit information
 - **Bulk Imports:** import summaries, failed records, validation errors
 
 ## 23. Dashboards
 
-**Admin Dashboard:** total students, total faculty, semesters, subjects, sections, Class Teacher assignments, active teams, mentors, phase statuses, pending evaluations, recent audit activity.
+**Admin Dashboard:** total students, total faculty, semesters, subjects, sections, Class Coordinator assignments, active teams, mentors, phase statuses, pending evaluations, recent audit activity.
 
-**Faculty Dashboard:** Class Teacher sections, teaching sections and section-subjects, mentoring teams, evaluation teams, submission counts, pending evaluations.
+**Faculty Dashboard:** Class Coordinator sections, teaching sections and section-subjects, mentoring teams, evaluation teams, submission counts, pending evaluations.
 
 **Student Dashboard:** current semester and section, teams (one per subject), mentor, phase deadlines, submission status.
 
@@ -559,17 +559,17 @@ Activities recorded include:
 | 65 | CSV imports validate rows, import valid rows and report failed rows. |
 | 66 | Reports are downloadable. |
 | 67 | Audit logs record security, workflow, evaluation, promotion, import, notification and configuration actions. |
-| 68 | Every section must have exactly one Class Teacher before the academic workflow begins. |
-| 69 | A Class Teacher can be any faculty member and need not teach in that section. |
-| 70 | A faculty member may be Class Teacher of sections in different semesters, but of at most one section per semester. |
-| 71 | A Class Teacher assignment does not carry over to another semester. |
+| 68 | Every section must have exactly one Class Coordinator before the academic workflow begins. |
+| 69 | A Class Coordinator can be any faculty member and need not teach in that section. |
+| 70 | A faculty member may be Class Coordinator of sections in different semesters, but of at most one section per semester. |
+| 71 | A Class Coordinator assignment does not carry over to another semester. |
 
 ## 27. Complete Workflow
 
 ```
 Admin Setup
 → Create Semesters & Subjects
-→ Create Sections within Semesters & assign Class Teachers
+→ Create Sections within Semesters & assign Class Coordinators
 → Add Faculty and Students (individually or via CSV) & activate accounts
 → Map Subjects to Sections & assign Faculty to each Section-Subject
 → Configure Team Sizes, Mentor List & Capacities
@@ -605,7 +605,7 @@ PostgreSQL provides relational integrity, transactional workflows, uniqueness co
 - Login, role-based access, first-login password change, OTP password recovery
 - Profile management for all users
 - Faculty and student account management with activation
-- Academic setup: semesters, subjects, sections, Class Teachers, subject-section mapping, faculty assignment
+- Academic setup: semesters, subjects, sections, Class Coordinators, subject-section mapping, faculty assignment
 - Admin configuration (team size, mentor capacity, team formation, team lock, cross-section evaluation)
 - Activity audit logging
 

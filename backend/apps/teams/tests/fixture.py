@@ -18,7 +18,7 @@ class Phase2Fixture(PMSTestCase):
 
     DAA → A (Xavier), B (Yamini).  DSA → A only (Xavier).
     Students: A1 Asha, A2 Arjun, A3 Aman (A); B1 Bina, B2 Bala (B).
-    Xavier is class teacher of A. Team formation is ON, sizes 2..3.
+    Xavier is class coordinator of A. Team formation is ON, sizes 2..3.
     """
 
     def setUp(self):

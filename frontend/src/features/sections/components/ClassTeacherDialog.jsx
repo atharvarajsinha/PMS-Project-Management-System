@@ -30,7 +30,7 @@ export default function ClassTeacherDialog({ section, onOpenChange }) {
 
   const mutation = useApiMutation((v) => setClassTeacher(section.id, apiId(v.faculty_id)), {
     invalidate: sectionInvalidate,
-    success: "Class teacher assigned",
+    success: "Class coordinator assigned",
     silentError: true,
     onSuccess: close,
   });
@@ -42,7 +42,7 @@ export default function ClassTeacherDialog({ section, onOpenChange }) {
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Assign class teacher"
+      title="Assign class coordinator"
       description={section ? `Semester ${section.semester.semester_number} · Section ${section.name}` : undefined}
     >
       <Form {...form}>

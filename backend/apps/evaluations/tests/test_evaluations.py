@@ -241,7 +241,7 @@ class ProgressAndClassTeacherMarksTests(MarksBase):
         phase = self.make_phase(start=-1, end=1)
         self.submit_work(phase)
         self.marks(self.x_api, phase, 10, students={self.a1: 14})
-        # Xavier is class teacher of A; Asha (A1) is in section A
+        # Xavier is class coordinator of A; Asha (A1) is in section A
         r = self.x_api.get(f"/api/v1/my/class-sections/{self.a.id}/teams/{self.a1.id}/")
         self.assertEqual(r.status_code, 200, r.content)
         daa = next(s for s in r.json()["subjects"] if s["semester_subject"]["id"] == self.daa.id)
@@ -251,7 +251,7 @@ class ProgressAndClassTeacherMarksTests(MarksBase):
         self.assertEqual(daa["totals"], {"marks": "14.00", "max_marks": "20.00"})
         dsa = next(s for s in r.json()["subjects"] if s["semester_subject"]["id"] == self.dsa.id)
         self.assertIsNone(dsa["team"])
-        # Bina is in section B: not Xavier's class; Yamini isn't A's class teacher
+        # Bina is in section B: not Xavier's class; Yamini isn't A's class coordinator
         self.assertEqual(self.x_api.get(f"/api/v1/my/class-sections/{self.a.id}/teams/{self.b1.id}/").status_code, 404)
         self.assertEqual(self.as_faculty(self.y).get(f"/api/v1/my/class-sections/{self.a.id}/teams/{self.a1.id}/").status_code, 404)
 

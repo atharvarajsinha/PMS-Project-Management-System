@@ -68,7 +68,7 @@ export default function AdminDashboard() {
               <ul className="mt-2 space-y-1">
                 <TodoItem to="/admin/faculty?status=INACTIVE" icon={GraduationCap} count={pending.inactive_faculty} label="Inactive faculty accounts" />
                 <TodoItem to="/admin/students?status=INACTIVE" icon={Users} count={pending.inactive_students} label="Inactive student accounts" />
-                <TodoItem to="/admin/sections?has_class_teacher=false" icon={UserCheck} count={pending.sections_without_class_teacher} label="Sections without a class teacher" />
+                <TodoItem to="/admin/sections?has_class_teacher=false" icon={UserCheck} count={pending.sections_without_class_teacher} label="Sections without a class coordinator" />
                 <TodoItem to="/admin/mapping?tab=list&unassigned=true" icon={Network} count={pending.section_subjects_without_faculty} label="Section subjects without faculty" />
               </ul>
             )}
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { to: "/admin/semesters", icon: CalendarRange, label: "1. Semesters" },
-              { to: "/admin/sections", icon: LayoutGrid, label: "2. Sections & class teachers" },
+              { to: "/admin/sections", icon: LayoutGrid, label: "2. Sections & class coordinators" },
               { to: "/admin/subjects", icon: BookOpen, label: "3. Subjects" },
               { to: "/admin/mapping", icon: Network, label: "4. Subject mapping" },
             ].map((step) => (

@@ -76,7 +76,7 @@ Runs one college. (The Super Admin can do all of this too, through the college s
 
 ### 3.1 Dashboard
 1. **Counts:** faculty, students, semesters, subjects, sections, subject offerings, section-subject mappings.
-2. **To-do list:** inactive faculty, inactive students, sections without a class teacher, section-subjects without
+2. **To-do list:** inactive faculty, inactive students, sections without a class coordinator, section-subjects without
    faculty — each links to the filtered list.
 3. **Per-semester breakdown:** sections, subjects and students in each semester.
 4. **Team status:** whether team formation is open and whether teams are locked.
@@ -107,7 +107,7 @@ Runs one college. (The Super Admin can do all of this too, through the college s
 2. **Subjects.** College-wide catalogue: **code** (unique) and **name**. Filter by semester.
 3. **Sections.** Per semester (e.g. Sem 7 A, B, C): **semester** + **name** (unique within the semester).
    Delete blocked while the section has students.
-4. **Class teachers.** Assign or remove one class teacher per section; a faculty member can be class teacher of
+4. **Class coordinators.** Assign or remove one class coordinator per section; a faculty member can be class coordinator of
    only one section per semester.
 5. **Subject offerings.** Choose which subjects run in which semester.
 6. **Subject mapping grid.** For a semester: subjects × sections; map a subject to a section, pick the teaching
@@ -118,7 +118,7 @@ Runs one college. (The Super Admin can do all of this too, through the college s
 
 ### 3.5 Bulk operations
 1. **CSV import** (Import Data page, or "Import CSV" on each list page) for: **faculty, semesters, subjects,
-   sections (with class teachers), students, subject mappings (with teaching faculty), mentors**.
+   sections (with class coordinators), students, subject mappings (with teaching faculty), mentors**.
    - Download a **template** with the right columns and example rows.
    - Upload → **preview** (a dry run that shows exactly what will happen: new / updated / skipped / error per
      row, with the reason).
@@ -191,13 +191,13 @@ with who, their role, when, IP address, browser, and old/new values. *(Viewer pa
 
 ## 4. Faculty
 
-A faculty member can be any combination of: teacher of section-subjects, class teacher, mentor and evaluator.
+A faculty member can be any combination of: teacher of section-subjects, class coordinator, mentor and evaluator.
 
 ### 4.1 Dashboard
 1. Counts and lists of **class-teacher sections** (with inactive students) and **teaching assignments**.
 2. College team rules (team size, whether formation is open/locked).
 
-### 4.2 My Classes (class teacher)
+### 4.2 My Classes (class coordinator)
 1. **Section students.** Add students to their own section (section is fixed), edit details, activate /
    deactivate (single or bulk), resend credentials. Can't delete students or move them to another section.
 2. **Students' teams** (per section) — for every student × subject: their **team**, whether they are **Team

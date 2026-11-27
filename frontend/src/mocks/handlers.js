@@ -908,7 +908,7 @@ function resolveAssignableFaculty(v, field, facultyId, collegeId) {
   return f;
 }
 
-/** 409 if faculty is already class teacher of another section in the same semester. */
+/** 409 if faculty is already class coordinator of another section in the same semester. */
 function assertClassTeacherSlotFree(facultyId, semesterId, exceptSectionId, field) {
   const other = getDb().sections.find(
     (s) => s.class_teacher_id === facultyId && s.semester_id === semesterId && s.id !== exceptSectionId,
@@ -916,7 +916,7 @@ function assertClassTeacherSlotFree(facultyId, semesterId, exceptSectionId, fiel
   if (other) {
     const sem = byId(getDb().semesters, semesterId);
     const f = facultySummary(facultyId);
-    const msg = `${f ? f.name : 'This faculty member'} is already class teacher of Section ${other.name} in Semester ${sem ? sem.semester_number : ''}.`.replace(' .', '.');
+    const msg = `${f ? f.name : 'This faculty member'} is already class coordinator of Section ${other.name} in Semester ${sem ? sem.semester_number : ''}.`.replace(' .', '.');
     throw conflict(msg, { [field]: [msg] });
   }
 }
@@ -1727,7 +1727,7 @@ const subjectHandlers = [
 ];
 
 // ===========================================================================
-// Handlers: sections & class teachers (§15)
+// Handlers: sections & class coordinators (§15)
 // ===========================================================================
 
 function cleanSectionName(v, body, partial) {
@@ -1803,7 +1803,7 @@ const sectionHandlers = [
       v.add('semester_id', 'A section cannot move to another semester.');
     }
     if (present(body, 'class_teacher_id')) {
-      v.add('class_teacher_id', 'Use PUT/DELETE /sections/{id}/class-teacher/ to change the class teacher.');
+      v.add('class_teacher_id', 'Use PUT/DELETE /sections/{id}/class-teacher/ to change the class coordinator.');
     }
     const name = cleanSectionName(v, body, true);
     v.throwIfAny();

@@ -7,7 +7,7 @@ export const listMentoringHistory = (params) => get("/my/mentoring/history/", pa
 export const acceptMentoring = (id, note) => post(`/my/mentoring/${id}/accept/`, { note });
 export const rejectMentoring = (id, note) => post(`/my/mentoring/${id}/reject/`, { note });
 
-// Class teacher: where my section's students stand
+// Class coordinator: where my section's students stand
 export const getClassSectionTeams = (sectionId) => get(`/my/class-sections/${sectionId}/teams/`);
 export const getClassStudentProject = (sectionId, studentId) => get(`/my/class-sections/${sectionId}/teams/${studentId}/`);
 export const getClassSectionMarks = (sectionId) => get(`/my/class-sections/${sectionId}/marks/`);

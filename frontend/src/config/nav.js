@@ -69,7 +69,7 @@ export const collegeAdminNav = [
   { label: "Students", to: "/admin/students", icon: Users, load: pages.students },
   { label: "Semesters", to: "/admin/semesters", icon: CalendarRange, load: pages.semesters },
   { label: "Subjects", to: "/admin/subjects", icon: BookOpen, load: pages.subjects },
-  { label: "Sections & Class Teachers", short: "Sections", to: "/admin/sections", icon: LayoutGrid, load: pages.sections },
+  { label: "Sections & CCs", short: "Sections", to: "/admin/sections", icon: LayoutGrid, load: pages.sections },
   { label: "Subject Mapping", short: "Mapping", to: "/admin/mapping", icon: Network, load: pages.mapping },
   { label: "Phases", to: "/admin/phases", icon: CalendarClock, load: pages.phases },
   { label: "Mentors", to: "/admin/mentors", icon: UserCheck, load: pages.mentors },

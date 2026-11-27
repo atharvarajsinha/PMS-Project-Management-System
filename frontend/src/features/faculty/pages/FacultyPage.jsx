@@ -115,7 +115,7 @@ export default function FacultyPage() {
       ),
     },
     { key: "phone", header: "Phone", cell: (f) => f.phone || "—" },
-    { key: "ct", header: "Class teacher", cell: classTeacher },
+    { key: "ct", header: "Class coordinator", cell: classTeacher },
     { key: "teaching", header: "Subjects", className: "tabular-nums", cell: (f) => f.teaching_count },
     { key: "evaluating", header: "Evaluating", className: "tabular-nums", cell: (f) => evaluating(f) },
     { key: "status", header: "Status", cell: (f) => <StatusBadge status={f.status} /> },
@@ -148,7 +148,7 @@ export default function FacultyPage() {
           ["Status", <StatusBadge key="s" status={f.status} />],
           ["Subjects", f.teaching_count],
           ["Evaluating", evaluating(f)],
-          ["Class teacher", classTeacher(f)],
+          ["Class coordinator", classTeacher(f)],
         ]}
       />
     </>
@@ -188,7 +188,7 @@ export default function FacultyPage() {
           noun="faculty"
           mutationFn={bulkDeleteFaculty}
           invalidate={invalidate}
-          description="Their accounts are removed permanently; their class-teacher slots and subject assignments become unassigned."
+          description="Their accounts are removed permanently; their class coordinator roles and subject assignments become unassigned."
         />
       </BulkBar>
       <DataView
@@ -237,7 +237,7 @@ export default function FacultyPage() {
         open={confirm?.type === "delete"}
         onOpenChange={() => setConfirm(null)}
         title={`Delete faculty ${cf?.name}?`}
-        description="This permanently removes the account. Their class-teacher slots and subject assignments become unassigned. This cannot be undone."
+        description="This permanently removes the account. Their class coordinator roles and subject assignments become unassigned. This cannot be undone."
         confirmText={cf?.email}
         onConfirm={() => remove.mutateAsync(cf)}
       />

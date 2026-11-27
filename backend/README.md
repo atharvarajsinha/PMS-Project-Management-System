@@ -44,7 +44,7 @@ apps/common/       base model, cookie-JWT auth, CSRF, errors, permissions, tenan
                    pagination/filters, audit log, email outbox, password/OTP utils, health + jobs endpoints
 apps/colleges/     College, CollegeSettings, Super Admin platform APIs, /college/, /settings/
 apps/accounts/     User (custom), Faculty, Student, OTPs, auth + /me, faculty & student management
-apps/academics/    Semester, Subject, Section (+ class teacher), SemesterSubject, SectionSubject
+apps/academics/    Semester, Subject, Section (+ class coordinator), SemesterSubject, SectionSubject
 ```
 
 ## Deploying to Render

@@ -1,6 +1,6 @@
 """Faculty portal (`/my/...`): a faculty member's own class-teacher sections and teaching.
 
-- Class teacher: view their sections and manage those sections' students
+- Class coordinator: view their sections and manage those sections' students
   (create, edit, activate/deactivate, resend credentials). Deleting students and
   moving them between sections stays with the College Admin.
 - Teaching: read-only view of their section-subject assignments and the students in them.
@@ -26,7 +26,7 @@ from .views import SECTION_SUBJECTS_PREFETCH
 
 @extend_schema(tags=["faculty-portal"])
 class MyClassSectionViewSet(CollegeScopedMixin, viewsets.ReadOnlyModelViewSet):
-    """GET /my/class-sections/ — sections where I am the class teacher."""
+    """GET /my/class-sections/ — sections where I am the class coordinator."""
 
     permission_classes = [IsFaculty]
     serializer_class = SectionSerializer
@@ -46,7 +46,7 @@ class MyClassSectionViewSet(CollegeScopedMixin, viewsets.ReadOnlyModelViewSet):
 
 @extend_schema(tags=["faculty-portal"])
 class MyClassStudentViewSet(StudentViewSet):
-    """/my/class-sections/{section_pk}/students/ — the class teacher manages their students."""
+    """/my/class-sections/{section_pk}/students/ — the class coordinator manages their students."""
 
     permission_classes = [IsFaculty]
     serializer_class = ClassStudentSerializer

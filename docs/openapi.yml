@@ -688,7 +688,7 @@ paths:
   /api/v1/my/class-sections/:
     get:
       operationId: my_class_sections_list
-      description: GET /my/class-sections/ — sections where I am the class teacher.
+      description: GET /my/class-sections/ — sections where I am the class coordinator.
       parameters:
       - name: ordering
         required: false
@@ -728,7 +728,7 @@ paths:
   /api/v1/my/class-sections/{id}/:
     get:
       operationId: my_class_sections_retrieve
-      description: GET /my/class-sections/ — sections where I am the class teacher.
+      description: GET /my/class-sections/ — sections where I am the class coordinator.
       parameters:
       - in: path
         name: id
@@ -750,7 +750,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/:
     get:
       operationId: my_class_sections_students_list
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - name: ordering
@@ -814,7 +814,7 @@ paths:
           description: ''
     post:
       operationId: my_class_sections_students_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -843,7 +843,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/{id}/:
     get:
       operationId: my_class_sections_students_retrieve
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -871,7 +871,7 @@ paths:
           description: ''
     patch:
       operationId: my_class_sections_students_partial_update
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -905,7 +905,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/{id}/activate/:
     post:
       operationId: my_class_sections_students_activate_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -934,7 +934,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/{id}/deactivate/:
     post:
       operationId: my_class_sections_students_deactivate_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -963,7 +963,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/{id}/resend-credentials/:
     post:
       operationId: my_class_sections_students_resend_credentials_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -988,7 +988,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/bulk-activate/:
     post:
       operationId: my_class_sections_students_bulk_activate_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -1016,7 +1016,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/bulk-deactivate/:
     post:
       operationId: my_class_sections_students_bulk_deactivate_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -1044,7 +1044,7 @@ paths:
   /api/v1/my/class-sections/{section_pk}/students/bulk-delete/:
     post:
       operationId: my_class_sections_students_bulk_delete_create
-      description: /my/class-sections/{section_pk}/students/ — the class teacher manages
+      description: /my/class-sections/{section_pk}/students/ — the class coordinator manages
         their students.
       parameters:
       - in: path
@@ -4700,7 +4700,7 @@ components:
       - new_password
     ClassStudent:
       type: object
-      description: 'Student as managed by their class teacher: the section is fixed
+      description: 'Student as managed by their class coordinator: the section is fixed
         to the teacher''s section.'
       properties:
         id:
@@ -4769,7 +4769,7 @@ components:
       - user_id
     ClassStudentRequest:
       type: object
-      description: 'Student as managed by their class teacher: the section is fixed
+      description: 'Student as managed by their class coordinator: the section is fixed
         to the teacher''s section.'
       properties:
         name:
@@ -5886,7 +5886,7 @@ components:
       - otp
     PatchedClassStudentRequest:
       type: object
-      description: 'Student as managed by their class teacher: the section is fixed
+      description: 'Student as managed by their class coordinator: the section is fixed
         to the teacher''s section.'
       properties:
         name:

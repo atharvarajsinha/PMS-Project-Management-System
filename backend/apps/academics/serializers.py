@@ -28,7 +28,7 @@ def college_semester_subjects(college):
 
 
 def ensure_class_teacher_free(faculty, semester, exclude_section=None):
-    """A faculty member can be class teacher of only one section per semester."""
+    """A faculty member can be class coordinator of only one section per semester."""
     if faculty is None:
         return
     clash = Section.objects.filter(semester=semester, class_teacher=faculty)
@@ -36,7 +36,7 @@ def ensure_class_teacher_free(faculty, semester, exclude_section=None):
         clash = clash.exclude(pk=exclude_section.pk)
     clash = clash.first()
     if clash:
-        message = f"{faculty.user.name} is already class teacher of section {clash.name} in {semester}."
+        message = f"{faculty.user.name} is already class coordinator of section {clash.name} in {semester}."
         raise Conflict(message, {"class_teacher_id": [message]})
 
 
@@ -128,7 +128,7 @@ class SectionSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance is not None:
-            # PATCH only renames; semester is fixed, class teacher has its own endpoint
+            # PATCH only renames; semester is fixed, class coordinator has its own endpoint
             self.fields["semester_id"].read_only = True
             self.fields["class_teacher_id"].read_only = True
 

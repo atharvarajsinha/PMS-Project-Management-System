@@ -61,7 +61,7 @@ export default function TeachingDetailPage() {
               <dd className="mt-1 text-2xl font-semibold tabular-nums">{t.students_count}</dd>
             </div>
             <div className="rounded-lg border bg-card p-4">
-              <dt className="text-xs text-muted-foreground">Class teacher</dt>
+              <dt className="text-xs text-muted-foreground">Class coordinator</dt>
               <dd className="mt-1 flex items-center gap-2 text-sm font-medium">
                 <UserCheck className="size-4 text-muted-foreground" aria-hidden />
                 {t.class_teacher ? t.class_teacher.name : <span className="text-muted-foreground">Not assigned</span>}
@@ -105,7 +105,7 @@ export default function TeachingDetailPage() {
           <EmptyState
             icon={Users}
             title={filtered ? "No students match" : "No students in this section yet"}
-            description={filtered ? "Try a different search or filter." : "The section's class teacher or your admin adds students."}
+            description={filtered ? "Try a different search or filter." : "The section's class coordinator or your admin adds students."}
           />
         }
       />

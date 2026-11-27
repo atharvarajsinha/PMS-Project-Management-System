@@ -328,10 +328,10 @@ class SubjectImporter(Importer):
 
 class SectionImporter(Importer):
     kind = "sections"
-    label = "Sections & class teachers"
+    label = "Sections & class coordinators"
     description = (
-        "Adds sections to existing semesters and sets their class teacher. "
-        "For a section that already exists, a class_teacher_email assigns or changes its class teacher."
+        "Adds sections to existing semesters and sets their class coordinator. "
+        "For a section that already exists, a class_teacher_email assigns or changes its class coordinator."
     )
     columns = (
         Column("semester", True, "Semester number, e.g. 7"),
@@ -354,7 +354,7 @@ class SectionImporter(Importer):
             data = {"semester_id": semester.pk, "name": name, "class_teacher_id": teacher.pk if teacher else None}
             section = self.save(SectionSerializer(data=data, context=self.context))
             audit.record(self.request, "section.create", section, new=audit.snapshot(section, ("semester", "name", "class_teacher")))
-            suffix = f" with class teacher {teacher.user.name}" if teacher else ""
+            suffix = f" with class coordinator {teacher.user.name}" if teacher else ""
             return "created", f"Section {name} added to {semester}{suffix}."
 
         if teacher is None or existing.class_teacher_id == teacher.pk:
@@ -364,7 +364,7 @@ class SectionImporter(Importer):
         existing.class_teacher = teacher
         existing.save(update_fields=["class_teacher", "updated_at"])
         audit.record(self.request, "section.class_teacher_assign", existing, old=old, new=audit.snapshot(existing, ["class_teacher"]))
-        return "updated", f"{teacher.user.name} is now class teacher of section {name}."
+        return "updated", f"{teacher.user.name} is now class coordinator of section {name}."
 
 
 class MappingImporter(Importer):

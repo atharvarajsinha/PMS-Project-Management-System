@@ -37,7 +37,7 @@ const ORDERING_OPTIONS = [
   { value: "-created_at", label: "Newest first" },
 ];
 
-// Class teacher: their section's students. No delete or section moves (College Admin only).
+// Class coordinator: their section's students. No delete or section moves (College Admin only).
 export default function ClassSectionPage() {
   const { sectionId } = useParams();
   const { params, setParam } = useListParams({ ordering: "roll_number" });
@@ -161,7 +161,7 @@ export default function ClassSectionPage() {
       <BackLink />
       <PageHeader
         title={s ? sectionLabel(s.semester.semester_number, s.name) : "Class section"}
-        description="You're the class teacher. Add your students, keep their details up to date and activate their accounts."
+        description="You're the class coordinator. Add your students, keep their details up to date and activate their accounts."
         actions={
           <>
             <Button variant="outline" asChild>

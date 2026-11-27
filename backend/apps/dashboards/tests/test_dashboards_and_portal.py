@@ -7,7 +7,7 @@ from apps.common.tests.base import PMSTestCase
 
 
 class Fixture(PMSTestCase):
-    """Sem 7: sections A, B. DAA → A (Xavier), B (Yamini). DSA → A (Xavier). Xavier is class teacher of A."""
+    """Sem 7: sections A, B. DAA → A (Xavier), B (Yamini). DSA → A (Xavier). Xavier is class coordinator of A."""
 
     def setUp(self):
         super().setUp()
@@ -129,7 +129,7 @@ class FacultyPortalTests(Fixture):
         self.assertEqual(r.json()["section"]["name"], "A")
         self.assertEqual(Student.objects.get(roll_number="A3").section, self.a)
 
-        # section can't be changed by the class teacher (field is not accepted)
+        # section can't be changed by the class coordinator (field is not accepted)
         r = self.client.patch(f"{base}{self.s1.id}/", {"phone": "9876543210", "section_id": self.b.id}, format="json")
         self.assertEqual(r.status_code, 200, r.content)
         self.s1.refresh_from_db()

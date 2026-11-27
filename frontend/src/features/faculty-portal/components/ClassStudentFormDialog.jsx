@@ -17,7 +17,7 @@ const base = { name, phone, roll_number: z.string().trim().min(1, "Roll number i
 const createSchema = z.object({ ...base, email });
 const editSchema = z.object(base);
 
-// Class teacher's add/edit student form: the section is always the teacher's own section.
+// Class coordinator's add/edit student form: the section is always the teacher's own section.
 export default function ClassStudentFormDialog({ open, onOpenChange, section, student }) {
   const isEdit = !!student;
   const [formError, setFormError] = useState(null);

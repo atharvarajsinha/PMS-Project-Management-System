@@ -101,17 +101,17 @@ export default function SectionFormDialog({ open, onOpenChange, section, default
               <SelectField
                 control={form.control}
                 name="class_teacher_id"
-                label="Class teacher"
+                label="Class coordinator"
                 options={faculty.options}
                 loading={faculty.isLoading}
                 error={faculty.isError}
-                none="No class teacher yet"
+                none="No class coordinator yet"
                 className="md:col-span-2"
-                description="Optional. A faculty member can be class teacher of one section per semester."
+                description="Optional. A faculty member can be class coordinator of one section per semester."
                 showHint={faculty.noneAssignable}
                 emptyHint={{
                   text: faculty.isEmpty
-                    ? "No faculty added yet. You can create the section now and assign a class teacher later."
+                    ? "No faculty added yet. You can create the section now and assign a class coordinator later."
                     : "No active faculty yet. Activate a faculty account to assign it, or assign later.",
                   linkLabel: "Go to Faculty",
                   to: "/admin/faculty",

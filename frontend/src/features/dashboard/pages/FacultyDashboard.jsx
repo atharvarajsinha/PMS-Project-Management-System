@@ -76,8 +76,8 @@ export default function FacultyDashboard() {
               <div className="rounded-lg border bg-card">
                 <EmptyState
                   icon={LayoutGrid}
-                  title="You're not a class teacher"
-                  description="If your admin makes you class teacher of a section, you'll manage its students from here."
+                  title="You're not a class coordinator"
+                  description="If your admin makes you class coordinator of a section, you'll manage its students from here."
                 />
               </div>
             )}
