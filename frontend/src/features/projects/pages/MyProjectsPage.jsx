@@ -61,7 +61,7 @@ export default function MyProjectsPage() {
                 </span>
               </span>
             )}
-            renderItem={(item) => <SubjectCard item={item} settings={d.settings} studentId={d.student.id} />}
+            renderItem={(item) => <SubjectCard item={item} settings={d.settings} studentId={d.student.id} student={d.student} />}
           />
         ) : (
           <div className="rounded-lg border">

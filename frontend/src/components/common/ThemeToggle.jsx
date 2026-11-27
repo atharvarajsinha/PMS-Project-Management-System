@@ -22,7 +22,7 @@ export default function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-11 md:size-10" aria-label="Change theme" title="Theme">
+        <Button variant="outline" size="icon" className="size-10 rounded-xl text-primary" aria-label="Change theme" title="Theme">
           <Current className="size-5" strokeWidth={1.75} />
         </Button>
       </DropdownMenuTrigger>

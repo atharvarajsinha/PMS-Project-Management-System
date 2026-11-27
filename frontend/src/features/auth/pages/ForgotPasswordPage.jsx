@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-center text-3xl font-bold tracking-tight md:text-4xl">Forgot password</h1>
+      <h1 className="mb-2 text-center text-2xl font-bold tracking-tight sm:text-3xl">Forgot password</h1>
       <p className="mb-8 text-center text-sm text-muted-foreground">
         Enter your account email. If it exists, we'll send you a 6-digit code.
       </p>

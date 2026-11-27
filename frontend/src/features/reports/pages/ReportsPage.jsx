@@ -44,7 +44,7 @@ function ReportRow({ report, index }) {
   };
 
   return (
-    <li className="flex flex-col gap-4 rounded-lg border bg-card p-4 lg:flex-row lg:items-center">
+    <li className="flex flex-col gap-4 rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 lg:flex-row lg:items-center">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold tabular-nums text-primary" aria-hidden>
         {index + 1}
       </span>

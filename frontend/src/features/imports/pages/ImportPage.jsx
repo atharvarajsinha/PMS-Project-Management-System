@@ -38,7 +38,7 @@ export default function ImportPage() {
       ) : (
         <ol className="space-y-3">
           {kinds.data.results.map((k, i) => (
-            <li key={k.kind} className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:flex-row md:items-center">
+            <li key={k.kind} className="flex flex-col gap-4 rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:flex-row md:items-center">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold tabular-nums text-primary" aria-hidden>
                 {i + 1}
               </span>

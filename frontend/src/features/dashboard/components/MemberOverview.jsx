@@ -9,8 +9,8 @@ export default function MemberOverview() {
   const s = settings.data;
   if (!s) return null;
   return (
-    <section className="rounded-lg border bg-card p-4 md:p-6">
-      <h2 className="text-lg font-semibold">Project teams</h2>
+    <section className="rounded-[1.25rem] border border-border/80 bg-card p-4 shadow-soft md:p-6">
+      <h2 className="text-lg font-bold">Project teams</h2>
       <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
         <div>
           <dt className="text-xs text-muted-foreground">Team size</dt>

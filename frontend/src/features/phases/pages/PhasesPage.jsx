@@ -28,8 +28,9 @@ const subjectLabel = (p) => `Sem ${p.semester_subject.semester.semester_number} 
 function Progress({ stats }) {
   if (!stats) return "—";
   return (
-    <span className="text-sm tabular-nums">
-      {stats.submitted_count}/{stats.teams_count} submitted · {stats.evaluated_count} evaluated
+    <span className="flex flex-col text-sm leading-snug tabular-nums">
+      <span className="whitespace-nowrap">{stats.submitted_count}/{stats.teams_count} submitted</span>
+      <span className="whitespace-nowrap text-xs text-muted-foreground">{stats.evaluated_count} evaluated</span>
       {stats.evaluator_pending_count > 0 && <span className="text-warning"> · {stats.evaluator_pending_count} without evaluator</span>}
     </span>
   );

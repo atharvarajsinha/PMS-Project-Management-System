@@ -1,7 +1,8 @@
-import { Crown, ExternalLink, Mail, Phone } from "lucide-react";
+import { ExternalLink, Mail, Phone } from "lucide-react";
 import StatusBadge from "@/components/common/StatusBadge";
 import { labelOf, MentorStatus, SubmissionStatus, TeamRole } from "@/config/choices";
 import { cn, formatDate } from "@/lib/utils";
+import { SlotCard } from "@/features/projects/components/TeamSlots";
 
 // "Sem 7 · DAA — Algorithms"
 export const offeringLabel = (o) => (o ? `Sem ${o.semester.semester_number} · ${o.subject.code} — ${o.subject.name}` : "");
@@ -14,26 +15,22 @@ export function PhaseStatus({ status }) {
 }
 
 /** Members with the lead first-marked; `actions(member)` renders per-row buttons. */
-export function MemberList({ members, actions, className }) {
+export function MemberList({ members, actions, className, wide = false }) {
+  // Lead first, then members in their order: "Team Lead", "Member 1", "Member 2"…
+  const ordered = [...members.filter((m) => m.role === TeamRole.LEAD), ...members.filter((m) => m.role !== TeamRole.LEAD)];
   return (
-    <ul className={cn("divide-y rounded-md border", className)}>
-      {members.map((m) => (
-        <li key={m.id} className="flex min-h-12 items-center justify-between gap-3 px-3 py-2">
-          <div className="min-w-0">
-            <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-              {m.role === TeamRole.LEAD && <Crown className="size-3.5 shrink-0 text-primary" aria-label={labelOf("TeamRole", m.role)} />}
-              {m.name}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              <span className="font-mono">{m.roll_number}</span> · Section {m.section.name}
-              {m.role === TeamRole.LEAD && ` · ${labelOf("TeamRole", m.role)}`}
-            </p>
-            <MemberContact member={m} />
-          </div>
-          {actions && <div className="flex shrink-0 items-center gap-1">{actions(m)}</div>}
-        </li>
+    <div className={cn("grid gap-3", wide && "sm:grid-cols-2", className)}>
+      {ordered.map((m, i) => (
+        <SlotCard
+          key={m.id}
+          compact
+          title={m.role === TeamRole.LEAD ? labelOf("TeamRole", m.role) : `Member ${i}`}
+          pill={m.role === TeamRole.LEAD ? "Lead" : "Joined"}
+          person={m}
+          footer={actions?.(m) || null}
+        />
       ))}
-    </ul>
+    </div>
   );
 }
 

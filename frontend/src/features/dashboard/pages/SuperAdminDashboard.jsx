@@ -27,7 +27,7 @@ export default function SuperAdminDashboard() {
         <ErrorState error={query.error} onRetry={query.refetch} />
       ) : (
         <div className="space-y-8">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatTile label="Colleges" value={query.data?.count} icon={Building2} loading={query.isLoading} />
             <StatTile
               label="Active colleges"
@@ -40,7 +40,7 @@ export default function SuperAdminDashboard() {
           </div>
 
           {missingAdmin.length > 0 && (
-            <section className="rounded-lg border bg-card p-4 md:p-6">
+            <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
               <h2 className="text-lg font-semibold">Colleges without an admin</h2>
               <p className="mt-1 text-xs text-muted-foreground">Each college needs a College Admin to manage its data.</p>
               <ul className="mt-4 divide-y">
@@ -58,7 +58,7 @@ export default function SuperAdminDashboard() {
             </section>
           )}
 
-          <section className="rounded-lg border bg-card p-4 md:p-6">
+          <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Recent colleges</h2>
               <Button asChild variant="link" className="px-0">

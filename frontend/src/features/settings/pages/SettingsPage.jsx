@@ -97,7 +97,7 @@ export default function SettingsPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-3xl space-y-8" noValidate>
             <FormError message={formError} />
-            <section className="rounded-lg border bg-card p-4 md:p-6">
+            <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
               <h2 className="text-lg font-semibold">Team size</h2>
               <p className="mt-1 text-xs text-muted-foreground">Applies to every project subject in the college.</p>
               <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -106,7 +106,7 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border bg-card p-4 md:p-6">
+            <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
               <h2 className="text-lg font-semibold">Mentoring</h2>
               <div className="mt-6 grid gap-6 md:grid-cols-2">
                 <TextField
@@ -123,7 +123,7 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border bg-card p-4 md:p-6">
+            <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
               <h2 className="text-lg font-semibold">Teams & evaluation</h2>
               <div className="mt-2 divide-y">
                 <SwitchField

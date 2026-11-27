@@ -43,7 +43,7 @@ export default function FacultyProfileCard() {
   };
 
   return (
-    <section className="rounded-lg border bg-card p-4 md:p-6" aria-labelledby="faculty-profile-title">
+    <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6" aria-labelledby="faculty-profile-title">
       <h2 id="faculty-profile-title" className="text-lg font-semibold">
         Academic profile
       </h2>

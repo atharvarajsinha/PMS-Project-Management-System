@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         sans: ['"Inter Variable"', "Inter", "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
+        serif: ['"Fraunces Variable"', "Georgia", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",

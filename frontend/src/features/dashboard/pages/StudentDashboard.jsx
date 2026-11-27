@@ -44,7 +44,7 @@ export default function StudentDashboard() {
         }
       />
       <div className="space-y-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatTile label="Semester · Section" value={st ? `${st.semester?.semester_number} · ${st.section?.name}` : null} icon={CalendarRange} />
           <StatTile label="Project subjects" value={subjects.length} icon={FolderKanban} loading={projects.isLoading} />
           <StatTile label="Teams joined" value={`${teams}/${subjects.length}`} icon={UsersRound} loading={projects.isLoading} />

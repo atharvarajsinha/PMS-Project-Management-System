@@ -47,7 +47,7 @@ export default function AdminDashboard() {
         actions={c && <StatusBadge status={c.status} />}
       />
       <div className="space-y-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatTile label="Faculty" value={d?.counts.faculty} icon={GraduationCap} loading={loading} />
           <StatTile label="Students" value={d?.counts.students} icon={Users} loading={loading} />
           <StatTile label="Semesters" value={d?.counts.semesters} icon={CalendarRange} loading={loading} />
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          <section className="rounded-lg border bg-card p-4 md:p-6">
+          <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
             <h2 className="text-lg font-semibold">Needs attention</h2>
             {loading ? (
               <div className="mt-4 space-y-2">
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
             )}
           </section>
 
-          <section className="rounded-lg border bg-card p-4 md:p-6">
+          <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Team settings</h2>
               <Link to="/admin/settings" className="text-sm text-primary underline-offset-4 hover:underline">
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         </div>
 
         {d?.semesters.length > 0 && (
-          <section className="rounded-lg border bg-card p-4 md:p-6">
+          <section className="rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 md:p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Semesters</h2>
               <span className="text-xs text-muted-foreground tabular-nums">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
               { to: "/admin/subjects", icon: BookOpen, label: "3. Subjects" },
               { to: "/admin/mapping", icon: Network, label: "4. Subject mapping" },
             ].map((step) => (
-              <Link key={step.to} to={step.to} className="flex items-center gap-3 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent/50">
+              <Link key={step.to} to={step.to} className="flex items-center gap-3 rounded-[1.25rem] border border-border/80 bg-card shadow-soft p-4 text-sm font-medium hover:bg-accent/50">
                 <step.icon className="size-5 text-muted-foreground" strokeWidth={1.75} aria-hidden />
                 {step.label}
               </Link>

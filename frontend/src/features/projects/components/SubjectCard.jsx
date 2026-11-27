@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Crown, LogOut, Mail, Send, Trash2, UserMinus, UserPlus, X } from "lucide-react";
+import { BookOpen, CalendarDays, Check, ClipboardCheck, Crown, FolderKanban, LogOut, Mail, Send, Trash2, UserMinus, UserPlus, UsersRound, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Carousel from "@/components/common/Carousel";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import FormDialog from "@/components/common/FormDialog";
@@ -29,11 +29,13 @@ import {
   requestMentor,
 } from "@/features/projects/api";
 import StudentPicker from "@/features/teams/components/StudentPicker";
-import { EvaluatorLine, LinkList, MemberList, PhaseStatus, PhaseWindows, ProjectPhaseBadge, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
+import { EvaluatorLine, LinkList, PhaseStatus, PhaseWindows, ProjectPhaseBadge, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
 import { useApiMutation } from "@/hooks/useApiMutation";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { Markdown } from "@/components/common/Markdown";
 import { RubricList } from "@/features/phases/components/Rubric";
+import TeamSlots from "@/features/projects/components/TeamSlots";
+import { FormButton, ImportantNote, SectionHeading, StepItem } from "@/features/projects/components/FormBits";
 
 const invalidate = [projectsKey];
 
@@ -281,7 +283,7 @@ function Phases({ phases, team, canSubmit }) {
   );
 }
 
-export default function SubjectCard({ item, settings, studentId }) {
+export default function SubjectCard({ item, settings, studentId, student }) {
   const { semester_subject: o, team, is_lead: isLead, invites, phases } = item;
   const [dialog, setDialog] = useState(null); // "mentor" | "invite"
   const [confirm, setConfirm] = useState(null); // { kind, member? }
@@ -315,24 +317,32 @@ export default function SubjectCard({ item, settings, studentId }) {
 
   return (
     <Card>
-      <CardHeader className="space-y-1 border-b">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <CardTitle className="text-lg">
-              {o.subject.code} — {o.subject.name}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Semester {o.semester.semester_number} · {team ? `Team: ${team.display_name}` : "You're not in a team yet"}
-            </p>
-          </div>
+      <CardHeader className="space-y-6 border-b p-6 sm:p-8">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
+          <SectionHeading icon={FolderKanban} eyebrow="Project registration" title={o.subject.name} />
           {team && <StatusBadge status={isLead ? TeamRole.LEAD : TeamRole.MEMBER} group="TeamRole" />}
         </div>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <StepItem icon={CalendarDays} label="Semester" value={`Sem ${o.semester.semester_number}`} done />
+          <StepItem icon={BookOpen} label="Subject" value={o.subject.code} done align="center" />
+          <StepItem
+            icon={ClipboardCheck}
+            label="Team"
+            value={!team ? "Not formed" : team.is_complete ? "Ready" : "Forming"}
+            done={!!team?.is_complete}
+            align="right"
+          />
+        </div>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="p-6 sm:p-8">
         {!team && (
-          <DetailRow label="Team">
+          <section className="mb-6 space-y-6 border-b pb-8">
+            <SectionHeading icon={UsersRound} eyebrow="Form your team" title="Create a team or join one" />
+            <ImportantNote>
+              You can be in only one team for this subject. Teams have {settings.min_team_size}–{settings.max_team_size} members.
+            </ImportantNote>
             {invites.map((i) => (
-              <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+              <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-accent/50 px-4 py-3 text-sm">
                 <span className="flex items-center gap-2">
                   <Mail className="size-4 text-primary" aria-hidden /> {i.lead} invited you to <strong>{i.team_name}</strong>
                 </span>
@@ -346,18 +356,81 @@ export default function SubjectCard({ item, settings, studentId }) {
                 </span>
               </div>
             ))}
-            {canChange ? (
-              <Button onClick={() => create.mutate()} disabled={create.isPending}>
-                <UserPlus className="size-4" /> Create a team
-              </Button>
-            ) : (
-              <Alert>
-                <AlertDescription>
-                  {settings.teams_locked ? "Teams are locked. Contact your Admin to be added to a team." : "Team formation hasn't opened yet."}
-                </AlertDescription>
-              </Alert>
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-muted-foreground">Team Preview</p>
+              <TeamSlots
+                members={student ? [{ ...student, role: TeamRole.LEAD }] : []}
+                size={settings.max_team_size}
+                currentId={studentId}
+                emptyPill="Invite later"
+              />
+            </div>
+            <div className="border-t pt-6">
+              {canChange ? (
+                <FormButton onClick={() => create.mutate()} disabled={create.isPending}>
+                  Create &amp; Lead Team
+                </FormButton>
+              ) : (
+                <Alert>
+                  <AlertDescription>
+                    {settings.teams_locked ? "Teams are locked. Contact your Admin to be added to a team." : "Team formation hasn't opened yet."}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </section>
+        )}
+
+        {team && (
+          <section className="mb-6 space-y-6 border-b pb-8">
+            <SectionHeading icon={UsersRound} eyebrow="Your team" title={`Team Members (${team.members_count}/${settings.max_team_size})`} />
+            {!team.is_complete && (
+              <ImportantNote>A team needs at least {settings.min_team_size} members before it can choose a mentor.</ImportantNote>
             )}
-          </DetailRow>
+            <TeamSlots
+              members={team.members}
+              invites={isLead ? team.pending_invites : []}
+              size={settings.max_team_size}
+              currentId={studentId}
+              emptyPill={isLead && canChange ? "Invite" : "Open slot"}
+              onEmptyClick={isLead && canChange ? () => setDialog("invite") : undefined}
+              actions={
+                isLead && canChange
+                  ? (m) =>
+                      m.id !== studentId && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-8 px-3" onClick={() => setConfirm({ kind: "lead", member: m })}>
+                            <Crown className="size-4" /> Make lead
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 px-3 text-destructive" onClick={() => setConfirm({ kind: "remove", member: m })}>
+                            <UserMinus className="size-4" /> Remove
+                          </Button>
+                        </>
+                      )
+                  : undefined
+              }
+              inviteActions={(i) => (
+                <Button size="sm" variant="ghost" className="h-8 px-3" onClick={() => cancel.mutate(i)} disabled={cancel.isPending}>
+                  <X className="size-4" /> Cancel invite
+                </Button>
+              )}
+            />
+            {isLead && (
+              <details>
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Invite history</summary>
+                <div className="mt-2">
+                  <InviteHistory teamId={team.id} />
+                </div>
+              </details>
+            )}
+            {isLead && canChange && team.members_count + team.pending_invites.length < settings.max_team_size && (
+              <div className="border-t pt-6">
+                <FormButton onClick={() => setDialog("invite")}>
+                  <UserPlus /> Invite a Teammate
+                </FormButton>
+              </div>
+            )}
+          </section>
         )}
 
         {team && (
@@ -373,61 +446,6 @@ export default function SubjectCard({ item, settings, studentId }) {
                       }.`
                     : "Your team sends its project title and description in the first phase."}
                 </p>
-              )}
-            </DetailRow>
-
-            <DetailRow
-              label={`Members (${team.members_count}/${settings.max_team_size})`}
-              action={
-                isLead &&
-                canChange &&
-                team.members_count < settings.max_team_size && (
-                  <Button size="sm" variant="outline" onClick={() => setDialog("invite")}>
-                    <UserPlus className="size-4" /> Invite
-                  </Button>
-                )
-              }
-            >
-              {!team.is_complete && <p className="text-xs text-warning">A team needs at least {settings.min_team_size} members.</p>}
-              <MemberList
-                members={team.members}
-                actions={
-                  isLead && canChange
-                    ? (m) =>
-                        m.id !== studentId && (
-                          <>
-                            <Button size="sm" variant="ghost" title="Make Team Lead" onClick={() => setConfirm({ kind: "lead", member: m })}>
-                              <Crown className="size-4" />
-                              <span className="sr-only">Make {m.name} Team Lead</span>
-                            </Button>
-                            <Button size="sm" variant="ghost" title="Remove" onClick={() => setConfirm({ kind: "remove", member: m })}>
-                              <UserMinus className="size-4" />
-                              <span className="sr-only">Remove {m.name}</span>
-                            </Button>
-                          </>
-                        )
-                    : undefined
-                }
-              />
-              {isLead && team.pending_invites.length > 0 && (
-                <ul className="space-y-1 text-sm">
-                  {team.pending_invites.map((i) => (
-                    <li key={i.id} className="flex items-center justify-between gap-2 text-muted-foreground">
-                      <span>Invited {i.student.name} · waiting</span>
-                      <Button size="sm" variant="ghost" onClick={() => cancel.mutate(i)} disabled={cancel.isPending}>
-                        <X className="size-4" /> Cancel
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {isLead && (
-                <details>
-                  <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Invite history</summary>
-                  <div className="mt-2">
-                    <InviteHistory teamId={team.id} />
-                  </div>
-                </details>
               )}
             </DetailRow>
 

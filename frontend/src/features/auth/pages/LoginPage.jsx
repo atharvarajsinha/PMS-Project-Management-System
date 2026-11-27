@@ -98,6 +98,7 @@ import PasswordInput from "@/components/common/PasswordInput";
 import { HOME_BY_ROLE, useAuth } from "@/context/AuthContext";
 import { loginSchema } from "@/features/auth/schemas";
 import { applyApiErrors } from "@/lib/forms";
+import { LogIn } from "lucide-react";
 
 const MESSAGES = {
   INVALID_CREDENTIALS: "Incorrect email or password.",
@@ -127,18 +128,22 @@ export default function LoginPage() {
 
   return (
     <div className="w-full">
-      {/* Card: uses theme tokens only, so it follows light/dark automatically.
-          In dark mode the shadow is invisible, so the border carries the edge. */}
-      <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm sm:p-8 dark:shadow-none">
-        <header className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Sign in</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Use the email and password sent to you.</p>
+      <div>
+        <header className="mb-8 flex items-center gap-4">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-primary shadow-sm">
+            <LogIn className="size-5" strokeWidth={1.75} aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted-foreground">Welcome back</p>
+            <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
+          </div>
         </header>
+        <p className="-mt-4 mb-6 text-sm text-muted-foreground">Use the email and password sent to you.</p>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-5 [&_input]:h-11"
+            className="space-y-5 [&_input]:h-12"
             noValidate
           >
             <FormError message={formError} />
@@ -179,7 +184,7 @@ export default function LoginPage() {
               )}
             />
 
-            <div className="pt-1 [&_button]:h-11 [&_button]:w-full">
+            <div className="border-t pt-6 [&_button]:h-12 [&_button]:w-full [&_button]:text-base">
               <FormActions submitLabel="Sign in" pending={form.formState.isSubmitting} />
             </div>
           </form>

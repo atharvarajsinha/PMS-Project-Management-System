@@ -40,7 +40,7 @@ export default function Carousel({ items, index, onIndexChange, renderItem, tabL
         >
           <ChevronLeft className="size-4" />
         </Button>
-        <div role="tablist" aria-label={label} className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1" onKeyDown={onKeyDown}>
+        <div role="tablist" aria-label={label} className="relative flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1" onKeyDown={onKeyDown}>
           {items.map((item, i) => (
             <button
               key={itemKey ? itemKey(item) : i}

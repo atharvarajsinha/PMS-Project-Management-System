@@ -28,7 +28,7 @@ function SubjectMarks({ subject, students }) {
   const ssId = String(subject.semester_subject.id);
   if (!subject.phases.length) return <p className="py-6 text-center text-sm text-muted-foreground">No phases for this subject yet.</p>;
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="relative overflow-x-auto rounded-md border">
       <table className="w-full min-w-max text-sm">
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
           <tr>
