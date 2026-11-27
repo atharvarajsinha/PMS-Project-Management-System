@@ -36,7 +36,7 @@ export function TextField({ control, name, label, required, description, classNa
   );
 }
 
-/** Textarea with a bold / italic / list / link toolbar; the value is Markdown (shown with <Markdown>). */
+/** Textarea with a formatting toolbar (headings, lists and sub-lists, bold, italic, links, preview); the value is Markdown (shown with <Markdown>). */
 export function MarkdownField({ control, name, label, required, description, className, ...editorProps }) {
   return (
     <FormField

@@ -109,7 +109,7 @@ export default function PhaseFormDialog({ open, onOpenChange, phase, defaultOffe
             label="Details"
             rows={6}
             placeholder="What teams must submit"
-            description="Select text and use the toolbar (or Ctrl+B / Ctrl+I) for bold, italic, lists and links."
+            description="Use the toolbar for headings, paragraphs, bold, italic, links and lists. In a list, Tab makes a sub-list and Shift+Tab moves it back out. Check it in Preview."
           />
           <div className="grid gap-6 sm:grid-cols-2">
             <TextField control={form.control} name="start_date" label="Start date" type="date" required />
