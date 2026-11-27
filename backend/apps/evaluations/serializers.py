@@ -5,7 +5,7 @@ from apps.common.serializers import FacultyBriefSerializer
 from apps.projects.models import PhaseSubmission
 from apps.projects.serializers import SubmissionSerializer
 from apps.teams.models import TeamMember
-from apps.teams.serializers import OfferingBriefSerializer, PhaseBriefSerializer, StudentBriefSerializer
+from apps.teams.serializers import OfferingBriefSerializer, PhaseBriefSerializer, StudentContactSerializer
 
 from .models import Evaluation, EvaluatorAssignment, StudentMark
 
@@ -103,7 +103,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "project_title": team.project_title,
             "project_description": team.project_description,
             "lead_id": team.lead_id,
-            "members": [StudentBriefSerializer(m.student).data for m in team.members.all()],
+            "members": [StudentContactSerializer(m.student).data for m in team.members.all()],
         }
 
     def get_submission(self, a) -> dict | None:

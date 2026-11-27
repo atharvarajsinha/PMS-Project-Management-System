@@ -1,6 +1,7 @@
 import FormDialog from "@/components/common/FormDialog";
 import { Button } from "@/components/ui/button";
-import { isSubmitted, LinkList, offeringShort, PhaseStatus, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
+import { isSubmitted, LinkList, MemberList, offeringShort, PhaseStatus, ProjectSummary, SubmissionState } from "@/features/teams/components/TeamBits";
+import { TeamRole } from "@/config/choices";
 import { formatDateTime } from "@/lib/utils";
 
 /** Read-only view of one team's submission for one phase, with the team's project title and description. */
@@ -53,7 +54,9 @@ export default function SubmissionViewDialog({ row, onOpenChange }) {
 
           <section className="space-y-1">
             <h3 className="text-sm font-semibold">Members</h3>
-            <p className="text-sm text-muted-foreground">{row.team.members.map((m) => m.name).join(", ")}</p>
+            <MemberList
+              members={row.team.members.map((m) => ({ ...m, role: m.id === row.team.lead_id ? TeamRole.LEAD : TeamRole.MEMBER }))}
+            />
           </section>
 
           <div className="flex justify-end">

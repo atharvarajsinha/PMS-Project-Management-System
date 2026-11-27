@@ -76,6 +76,13 @@ class StudentBriefSerializer(serializers.Serializer):
         return {"id": student.section_id, "name": student.section.name}
 
 
+class StudentContactSerializer(StudentBriefSerializer):
+    """Student brief plus phone: only for people working with the team
+    (its members, mentors, evaluators and the admin), never in student search."""
+
+    phone = serializers.CharField(source="user.phone")
+
+
 class OfferingBriefSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     semester = serializers.SerializerMethodField()
@@ -140,7 +147,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     display_name = serializers.CharField(read_only=True)
     semester_subject = OfferingBriefSerializer(read_only=True)
-    lead = StudentBriefSerializer(read_only=True)
+    lead = StudentContactSerializer(read_only=True)
     members = serializers.SerializerMethodField()
     members_count = serializers.SerializerMethodField()
     is_complete = serializers.SerializerMethodField()
@@ -163,7 +170,7 @@ class TeamSerializer(serializers.ModelSerializer):
     def get_members(self, team) -> list:
         return [
             {
-                **StudentBriefSerializer(m.student).data,
+                **StudentContactSerializer(m.student).data,
                 "role": TeamRole.LEAD if m.student_id == team.lead_id else TeamRole.MEMBER,
                 "joined_at": m.created_at,
             }

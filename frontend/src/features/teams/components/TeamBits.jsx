@@ -1,4 +1,4 @@
-import { Crown, ExternalLink } from "lucide-react";
+import { Crown, ExternalLink, Mail, Phone } from "lucide-react";
 import StatusBadge from "@/components/common/StatusBadge";
 import { labelOf, MentorStatus, SubmissionStatus, TeamRole } from "@/config/choices";
 import { cn, formatDate } from "@/lib/utils";
@@ -28,11 +28,33 @@ export function MemberList({ members, actions, className }) {
               <span className="font-mono">{m.roll_number}</span> · Section {m.section.name}
               {m.role === TeamRole.LEAD && ` · ${labelOf("TeamRole", m.role)}`}
             </p>
+            <MemberContact member={m} />
           </div>
           {actions && <div className="flex shrink-0 items-center gap-1">{actions(m)}</div>}
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Email and phone of a team member as mailto:/tel: links (phone only when set). */
+export function MemberContact({ member, className }) {
+  if (!member.email && !member.phone) return null;
+  return (
+    <p className={cn("mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs", className)}>
+      {member.email && (
+        <a href={`mailto:${member.email}`} className="inline-flex min-w-0 items-center gap-1 text-primary hover:underline">
+          <Mail className="size-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">{member.email}</span>
+        </a>
+      )}
+      {member.phone && (
+        <a href={`tel:${member.phone.replace(/\s+/g, "")}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+          <Phone className="size-3 shrink-0" aria-hidden="true" />
+          {member.phone}
+        </a>
+      )}
+    </p>
   );
 }
 
