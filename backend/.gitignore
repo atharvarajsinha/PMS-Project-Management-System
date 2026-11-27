@@ -4,3 +4,6 @@ __pycache__/
 .env
 *.sqlite3
 staticfiles/
+
+# Production env values (pasted into Render / Vercel; never committed)
+.env.prod
