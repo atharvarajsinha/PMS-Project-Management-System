@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: "prompt",
+        // New deploys take over on their own: a "prompt" update could stay stuck behind an old
+        // cached build that never got far enough to show the Reload toast.
+        registerType: "autoUpdate",
         includeAssets: ["favicon.svg", "icons/apple-touch-180.png"],
         manifest: {
           name: "PMS : Project Management System",
@@ -32,6 +34,9 @@ export default defineConfig(({ mode }) => {
           navigateFallbackDenylist: [/^\/api\//],
           globIgnores: ["**/mockServiceWorker.js"],
           runtimeCaching: [], // never cache API responses (auth cookies, tenant data)
+          skipWaiting: true, // activate a new service worker at once
+          clientsClaim: true, // and let it control already-open tabs
+          cleanupOutdatedCaches: true,
         },
       }),
     ],
