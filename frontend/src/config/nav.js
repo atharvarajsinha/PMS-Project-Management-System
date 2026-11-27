@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarClock,
   CalendarRange,
+  FileDown,
   ClipboardCheck,
   FolderKanban,
   GraduationCap,
@@ -33,6 +34,7 @@ const pages = {
   mapping: () => import("@/features/mapping/pages/MappingPage"),
   settings: () => import("@/features/settings/pages/SettingsPage"),
   imports: () => import("@/features/imports/pages/ImportPage"),
+  reports: () => import("@/features/reports/pages/ReportsPage"),
   facultyDashboard: () => import("@/features/dashboard/pages/FacultyDashboard"),
   studentDashboard: () => import("@/features/dashboard/pages/StudentDashboard"),
   myClasses: () => import("@/features/faculty-portal/pages/ClassesPage"),
@@ -76,6 +78,7 @@ export const collegeAdminNav = [
   { label: "Teams", to: "/admin/teams", icon: UsersRound, load: pages.teams },
   { label: "Evaluations", to: "/admin/evaluations", icon: ClipboardCheck, load: pages.evaluations },
   { label: "Import Data", short: "Import", to: "/admin/import", icon: Upload, load: pages.imports },
+  { label: "Reports", to: "/admin/reports", icon: FileDown, load: pages.reports },
   { label: "Settings", to: "/admin/settings", icon: Settings, load: pages.settings },
 ];
 

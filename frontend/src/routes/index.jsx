@@ -31,6 +31,7 @@ const Sections = lazy(pages.sections);
 const Mapping = lazy(pages.mapping);
 const Settings = lazy(pages.settings);
 const Imports = lazy(pages.imports);
+const Reports = lazy(pages.reports);
 const FacultyDashboard = lazy(pages.facultyDashboard);
 const StudentDashboard = lazy(pages.studentDashboard);
 const MyClasses = lazy(pages.myClasses);
@@ -110,6 +111,7 @@ export const router = createBrowserRouter([
           { path: "teams", element: page(Teams) },
           { path: "evaluations", element: page(Evaluations) },
           { path: "import", element: page(Imports) },
+          { path: "reports", element: page(Reports) },
           { path: "settings", element: page(Settings) },
         ],
       },
