@@ -32,8 +32,27 @@ api.interceptors.request.use((config) => {
 // Refresh once on TOKEN_EXPIRED; concurrent requests share one refresh call
 let refreshing = null;
 
+// The API always answers with JSON (or an empty 204). An HTML page means /api was not routed to
+// the backend (e.g. a wrong Vercel rewrite falling through to index.html); treat it as an error
+// instead of letting the page be read as data, which made the router bounce /login <-> / forever.
+function isNonJsonBody(res) {
+  if (res.status === 204 || res.data === "" || res.data == null) return false;
+  const type = String(res.headers?.["content-type"] || "");
+  return !type.includes("json") && !(res.data instanceof Blob) && !(res.data instanceof ArrayBuffer);
+}
+
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (isNonJsonBody(res)) {
+      return Promise.reject({
+        status: res.status,
+        code: "BAD_RESPONSE",
+        message: "The server sent an unexpected response. The API address may be misconfigured.",
+        details: {},
+      });
+    }
+    return res;
+  },
   async (error) => {
     const original = error.config || {};
     const code = error.response?.data?.error?.code;

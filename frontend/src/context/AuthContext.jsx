@@ -24,7 +24,9 @@ export function AuthProvider({ children }) {
       try {
         await loadCsrf();
         const me = await authApi.getMe();
-        if (!cancelled) setUser(me);
+        // Only a real user (with a known role) counts as signed in; anything else would make the
+        // route guards redirect between /login and / without end.
+        if (!cancelled) setUser(me && typeof me === "object" && HOME_BY_ROLE[me.role] ? me : null);
       } catch {
         if (!cancelled) setUser(null);
       } finally {
