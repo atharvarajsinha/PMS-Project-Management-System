@@ -3,41 +3,41 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light: clean white surfaces, warm brown ink and a soft lavender glow (PBL form reference) */
+  /* Light: airy sky-blue surfaces with crisp white cards (reference-inspired) */
   :root {
-    --background: 240 33% 99%;
-    --foreground: 260 8% 12%;
+    --background: 204 100% 97%;
+    --foreground: 203 62% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 260 8% 12%;
+    --card-foreground: 203 62% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 260 8% 12%;
-    --primary: 20 25% 30%;
+    --popover-foreground: 203 62% 13%;
+    --primary: 199 86% 36%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 20 30% 97%;
-    --secondary-foreground: 20 25% 24%;
-    --muted: 20 25% 97%;
-    --muted-foreground: 20 18% 36%;
-    --accent: 20 35% 95%;
-    --accent-foreground: 20 30% 26%;
+    --secondary: 202 70% 95%;
+    --secondary-foreground: 203 62% 13%;
+    --muted: 202 72% 96%;
+    --muted-foreground: 203 20% 44%;
+    --accent: 200 88% 93%;
+    --accent-foreground: 199 86% 26%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --success: 158 74% 28%;
     --success-foreground: 0 0% 100%;
-    --warning: 43 75% 34%;
+    --warning: 30 92% 33%;
     --warning-foreground: 0 0% 100%;
-    --info: 20 25% 30%;
+    --info: 201 90% 33%;
     --info-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 88%;
-    --ring: 20 25% 30%;
+    --border: 202 55% 89%;
+    --input: 202 52% 85%;
+    --ring: 199 86% 36%;
     --radius: 1rem;
     /* Brand gradient: both stops keep white text >= 4.5:1 */
-    --gradient-from: 20 26% 36%;
-    --gradient-to: 18 30% 24%;
-    --glow: 236 60% 66%;
-    /* Copper used for small field icons, and amber for "Important" notices */
-    --copper: 18 62% 40%;
-    --amber: 43 75% 37%;
+    --gradient-from: 199 86% 37%;
+    --gradient-to: 207 84% 30%;
+    --glow: 197 92% 62%;
+    /* Small field icons follow the primary blue; "Important" notices use the warning tone */
+    --copper: 199 86% 36%;
+    --amber: 30 92% 33%;
   }
 
   /* Dark: true black surfaces, neutral borders, sky-blue accent only */
@@ -48,31 +48,31 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 98%;
-    --primary: 24 45% 74%;
+    --primary: 199 95% 64%;
     --primary-foreground: 0 0% 4%;
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 9%;
     --muted-foreground: 0 0% 64%;
     --accent: 0 0% 13%;
-    --accent-foreground: 24 50% 80%;
+    --accent-foreground: 199 95% 74%;
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
     --success: 152 62% 48%;
     --success-foreground: 0 0% 4%;
     --warning: 38 92% 56%;
     --warning-foreground: 0 0% 4%;
-    --info: 24 45% 74%;
+    --info: 199 95% 68%;
     --info-foreground: 0 0% 4%;
     --border: 0 0% 14%;
     --input: 0 0% 17%;
-    --ring: 24 45% 74%;
+    --ring: 199 95% 64%;
     /* Black text on both stops ≥ 5:1 */
-    --gradient-from: 26 48% 76%;
-    --gradient-to: 20 40% 64%;
-    --glow: 236 70% 72%;
-    --copper: 22 60% 66%;
-    --amber: 43 80% 60%;
+    --gradient-from: 199 95% 63%;
+    --gradient-to: 210 92% 58%;
+    --glow: 199 95% 60%;
+    --copper: 199 95% 64%;
+    --amber: 38 92% 56%;
   }
 
   * { @apply border-border; }
@@ -81,8 +81,9 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
     background-image:
-      radial-gradient(1100px 560px at 8% -12%, hsl(236 80% 94% / 0.55), transparent 62%),
-      radial-gradient(900px 480px at 100% 0%, hsl(20 60% 95% / 0.6), transparent 58%);
+      radial-gradient(1100px 560px at 8% -12%, hsl(196 92% 84% / 0.65), transparent 62%),
+      radial-gradient(900px 480px at 100% 0%, hsl(190 92% 88% / 0.55), transparent 58%),
+      radial-gradient(900px 620px at 50% 112%, hsl(205 92% 91% / 0.5), transparent 66%);
     background-attachment: fixed;
   }
   /* Dark mode stays black: only a faint cool sheen at the top edge */
@@ -128,8 +129,8 @@
   /* Soft, airy elevation for cards and floating panels */
   .shadow-soft {
     box-shadow:
-      0 1px 2px hsl(260 8% 12% / 0.04),
-      0 18px 40px -16px hsl(var(--glow) / 0.38);
+      0 1px 2px hsl(203 62% 13% / 0.04),
+      0 14px 34px -22px hsl(203 62% 13% / 0.28);
   }
   .dark .shadow-soft {
     box-shadow: none;

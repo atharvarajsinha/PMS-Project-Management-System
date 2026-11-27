@@ -15,12 +15,12 @@ export default defineConfig(({ mode }) => {
         registerType: "prompt",
         includeAssets: ["favicon.svg", "icons/apple-touch-180.png"],
         manifest: {
-          name: "PMS — Project Management System",
+          name: "PMS : Project Management System",
           short_name: "PMS",
           start_url: "/",
           display: "standalone",
-          background_color: "#FCFCFE",
-          theme_color: "#604639",
+          background_color: "#000000",
+          theme_color: "#0D7BA8",
           icons: [
             { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
             { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
@@ -35,21 +35,18 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+    resolve: { alias: { "@": path.resolve(import.meta.dirname, "./src") } },
     server: { proxy: { "/api": { target: proxyTarget, changeOrigin: true } } },
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ["react", "react-dom", "react-router-dom"],
-            radix: [
-              "@radix-ui/react-dialog",
-              "@radix-ui/react-dropdown-menu",
-              "@radix-ui/react-select",
-              "@radix-ui/react-popover",
-              "@radix-ui/react-tooltip",
-            ],
-            icons: ["lucide-react"],
+          // Vite 8 (Rolldown) only accepts manualChunks as a function
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return undefined;
+            if (/node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
+            if (/node_modules[\\/]@radix-ui[\\/]react-(dialog|dropdown-menu|select|popover|tooltip)[\\/]/.test(id)) return "radix";
+            if (/node_modules[\\/]lucide-react[\\/]/.test(id)) return "icons";
+            return undefined;
           },
         },
       },

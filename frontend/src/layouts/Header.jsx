@@ -44,10 +44,10 @@ export default function Header({ groups }) {
         >
           <Menu className="size-5" />
         </Button>
-        <Link to={HOME_BY_ROLE[user?.role] || "/"} className="shrink-0 rounded-md" aria-label="Project Portal home">
+        <Link to={HOME_BY_ROLE[user?.role] || "/"} className="shrink-0 rounded-md" aria-label="PMS home">
           {/* Super Admin's header also carries the college switcher, so phones show the emblem alone there */}
           <Logo compact className={user?.role === "SUPER_ADMIN" ? "sm:hidden" : "min-[360px]:hidden"} />
-          <Logo className={user?.role === "SUPER_ADMIN" ? "hidden sm:inline-flex" : "hidden min-[360px]:inline-flex"} />
+          <Logo size="responsive" className={user?.role === "SUPER_ADMIN" ? "hidden sm:inline-flex" : "hidden min-[360px]:inline-flex"} />
         </Link>
         {user?.college && (
           <div className="ml-3 hidden min-w-0 items-center gap-3 md:flex">
@@ -114,7 +114,7 @@ export default function Header({ groups }) {
         <SheetContent side="left" className="w-72 p-4">
           <SheetHeader className="mb-4 text-left">
             <SheetTitle>
-              <Logo />
+              <Logo size="short" />
             </SheetTitle>
             <SheetDescription className="sr-only">Main navigation</SheetDescription>
           </SheetHeader>

@@ -24,16 +24,29 @@ export function LogoMark({ className }) {
   );
 }
 
-/** Emblem + serif wordmark ("Project Portal" over a mono tagline); `compact` shows the emblem only. */
-export default function Logo({ compact = false, className }) {
+/**
+ * Emblem + serif wordmark; `compact` shows the emblem only.
+ * `size`: "full" = "Project Management System", "short" = "PMS",
+ * "responsive" = "PMS" below the lg breakpoint and the full name from lg up.
+ */
+export default function Logo({ compact = false, size = "full", className }) {
+  const full = size === "responsive" ? "hidden lg:inline" : size === "full" ? "inline" : "hidden";
+  const short = size === "responsive" ? "lg:hidden" : size === "short" ? "" : "hidden";
   return (
     <span className={cn("inline-flex items-center gap-3", className)}>
       <LogoMark className="drop-shadow-[0_4px_10px_hsl(var(--glow)/0.35)]" />
       {!compact && (
-        <span className="flex flex-col leading-none">
-          <span className="font-serif text-[19px] font-semibold tracking-[-0.01em] text-foreground">Project Portal</span>
-          <span className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">PBL · Teams &amp; Reviews</span>
-        </span>
+        <>
+          <span
+            className={cn(
+              "whitespace-nowrap font-serif text-[19px] font-semibold leading-none tracking-[-0.01em] text-foreground",
+              full,
+            )}
+          >
+            Project Management System
+          </span>
+          <span className={cn("font-serif text-[19px] font-semibold tracking-[-0.01em] text-foreground", short)}>PMS</span>
+        </>
       )}
     </span>
   );

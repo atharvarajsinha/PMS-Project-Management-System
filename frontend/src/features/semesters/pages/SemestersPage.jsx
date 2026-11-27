@@ -26,7 +26,7 @@ import { useSelection } from "@/hooks/useSelection";
 import { applyApiErrors } from "@/lib/forms";
 
 const schema = z.object({
-  semester_number: z.coerce.number({ invalid_type_error: "Enter a number" }).int("Whole numbers only").min(1, "1–12").max(12, "1–12"),
+  semester_number: z.coerce.number({ error: "Enter a number" }).int("Whole numbers only").min(1, "1–12").max(12, "1–12"),
 });
 
 function SemesterFormDialog({ open, onOpenChange, semester }) {

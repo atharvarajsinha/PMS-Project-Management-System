@@ -19,8 +19,8 @@ const base = {
   name,
   phone,
   roll_number: z.string().trim().min(1, "Roll number is required").max(50),
-  semester_id: z.string({ required_error: "Choose a semester" }).min(1, "Choose a semester"),
-  section_id: z.string({ required_error: "Choose a section" }).min(1, "Choose a section"),
+  semester_id: z.string({ error: "Choose a semester" }).min(1, "Choose a semester"),
+  section_id: z.string({ error: "Choose a section" }).min(1, "Choose a section"),
 };
 const createSchema = z.object({ ...base, email });
 const editSchema = z.object(base);

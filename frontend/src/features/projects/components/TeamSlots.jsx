@@ -62,7 +62,7 @@ export function SlotCard({ title, pill, person, muted, onClick, footer, compact 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="pt-0.5 text-base font-semibold leading-tight text-foreground">{title}</p>
-          <span className="shrink-0 rounded-full border border-border bg-[hsl(0_30%_98.5%)] px-2.5 py-0.5 font-mono text-xs text-primary dark:bg-muted">
+          <span className="shrink-0 rounded-full border border-border bg-[hsl(204_100%_98.5%)] px-2.5 py-0.5 font-mono text-xs text-primary dark:bg-muted">
             {pill}
           </span>
         </div>

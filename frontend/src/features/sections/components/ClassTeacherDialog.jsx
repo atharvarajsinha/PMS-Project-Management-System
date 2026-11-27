@@ -13,7 +13,7 @@ import { sectionInvalidate } from "@/features/sections/components/SectionFormDia
 import { applyApiErrors } from "@/lib/forms";
 import { apiId, idStr } from "@/lib/ids";
 
-const schema = z.object({ faculty_id: z.string({ required_error: "Choose a faculty member" }).min(1, "Choose a faculty member") });
+const schema = z.object({ faculty_id: z.string({ error: "Choose a faculty member" }).min(1, "Choose a faculty member") });
 
 export default function ClassTeacherDialog({ section, onOpenChange }) {
   const open = !!section;

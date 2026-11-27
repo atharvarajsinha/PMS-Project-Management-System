@@ -25,7 +25,7 @@ const FIELDS = [
   "team_formation_enabled",
 ];
 
-const int = (min, max, msg) => z.coerce.number({ invalid_type_error: "Enter a number" }).int("Whole numbers only").min(min, msg).max(max, msg);
+const int = (min, max, msg) => z.coerce.number({ error: "Enter a number" }).int("Whole numbers only").min(min, msg).max(max, msg);
 
 const schema = z
   .object({

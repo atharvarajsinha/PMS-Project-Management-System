@@ -22,7 +22,7 @@ const schema = z
     start_date: z.string().min(1, "Pick a start date"),
     end_date: z.string().min(1, "Pick an end date"),
     evaluation_end_date: z.string().optional(),
-    max_marks: z.coerce.number({ invalid_type_error: "Enter a number" }).min(0, "Can't be negative").max(9999),
+    max_marks: z.coerce.number({ error: "Enter a number" }).min(0, "Can't be negative").max(9999),
     criteria: criteriaSchema,
   })
   .refine((v) => !v.start_date || !v.end_date || v.end_date > v.start_date, {
